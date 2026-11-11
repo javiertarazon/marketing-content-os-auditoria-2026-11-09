@@ -1,0 +1,8 @@
+# Dependencias de los workers locales de Windows (apps/workers).
+# Se instalan con el interprete del venv del repo:
+#   .venv\Scripts\python.exe -m pip install -r apps\workers\requirements-workers.txt
+requests>=2.31
+beautifulsoup4>=4.12
+ddgs>=9.0
+gradio_client>=2,<3
+boto3>=1.34
