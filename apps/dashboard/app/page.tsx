@@ -1,21 +1,12 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import type { components } from "../types/api";
 
-// El contrato de la API es la fuente de verdad. Estos tipos se DERIVAN del
-// esquema OpenAPI generado por `scripts/generate_api_types.sh` (la salida vive
-// en `types/api.ts` y se versiona): si la API anade, quita o cambia un campo,
-// el build falla aqui en vez de que el dashboard se quede desincronizado en
-// silencio.
-//
-// `request`, `progress` y `output` son datos libres de dominio y llegan como
-// `dict[str, Any]` en el esquema, asi que se sustituyen por el detalle que el
-// dashboard usa de verdad. Todo lo demas (ids, estados, marcas de tiempo)
-// viene del contrato y no se re-declara a mano.
-type ApiJobRecord = components["schemas"]["JobRecord"];
-
-type Job = Omit<ApiJobRecord, "request" | "progress" | "output" | "error"> & {
+type Job = {
+  job_id: string;
+  parent_job_id?: string | null;
+  worker: "research" | "render";
+  status: string;
   request: { topic: string };
   progress: { stage: string; message: string; percent: number };
   output: {
@@ -60,9 +51,23 @@ type Job = Omit<ApiJobRecord, "request" | "progress" | "output" | "error"> & {
   error: string | null;
 };
 
-type Asset = components["schemas"]["MediaAsset"];
+type Asset = {
+  asset_id: string;
+  asset_type: "voice" | "video" | "image";
+  original_name: string;
+  content_type: string;
+  size_bytes: number;
+};
 
-type WorkerSession = components["schemas"]["WorkerInstanceStatus"];
+type WorkerSession = {
+  worker_id: string;
+  worker: "research" | "render";
+  state: "idle" | "working" | "stopped";
+  current_job_id: string | null;
+  stage: string;
+  last_seen: string;
+  online: boolean;
+};
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 const mixpostUrl = process.env.NEXT_PUBLIC_MIXPOST_URL || "http://localhost:3002";
