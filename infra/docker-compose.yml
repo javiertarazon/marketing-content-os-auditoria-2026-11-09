@@ -1,6 +1,9 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
+    # Solo en la red de datos: el postgres no se habla con nadie mas que la API.
+    networks: ["db"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-content}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
@@ -17,7 +20,9 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     profiles: ["future-queue"]
+    networks: ["db"]
     ports:
       - "127.0.0.1:6379:6379"
     healthcheck:
@@ -33,15 +38,26 @@ services:
     env_file:
       - ../.env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-content}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-content}
+      # La URL se respeta tal cual si viene en el .env: interpolar la contrasena
+      # dentro de la URL la rompe si lleva '@', '/' o ':'. El valor compuesto es
+      # solo el respaldo para cuando no hay DATABASE_URL definida.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-content}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-content}}
       # Al aprobar un video, la API lo encola a traves del publisher-service.
       # Dentro de la red de Docker se llama por su nombre de servicio.
       PUBLISHER_BASE_URL: ${PUBLISHER_BASE_URL:-http://publisher:8001}
+    restart: unless-stopped
+    # La API habla con el publisher y con postgres: necesita las dos redes.
+    networks: ["edge", "db"]
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   dashboard:
     build:
@@ -50,10 +66,18 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
         NEXT_PUBLIC_MIXPOST_URL: ${NEXT_PUBLIC_MIXPOST_URL:-http://localhost:3002/mixpost}
         NEXT_PUBLIC_OPEN_DISPATCH_URL: ${NEXT_PUBLIC_OPEN_DISPATCH_URL:-http://localhost:8010}
+    restart: unless-stopped
+    networks: ["edge"]
     ports:
       - "127.0.0.1:3001:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   # Publisher: encola la publicacion en el scheduler configurado.
   #   PUBLISHER_BACKEND=open_dispatch (por defecto) -> Open-Dispatch
@@ -77,29 +101,52 @@ services:
       # La ruta debe ser IDENTICA en los dos contenedores.
       OPEN_DISPATCH_MEDIA_DIR: /media
       MIXPOST_BASE_URL: http://mixpost/mixpost/api
+    # El publisher habla con el scheduler (Open-Dispatch o Mixpost), no con la
+    # base de datos: no necesita la red `db`.
+    networks: ["edge"]
     volumes:
       - open_dispatch_media:/media
+    restart: unless-stopped
     ports:
       - "127.0.0.1:8001:8001"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   worker-gateway:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     profiles: ["colab-tunnel"]
+    networks: ["edge"]
     volumes:
       - ./worker-gateway.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "127.0.0.1:8002:8080"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/healthz >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    # Version fijada: con 'latest' un 'docker compose pull' cambia el binario
+    # del tunel sin que nada lo detecte. (2026.10.7, verificada en el registry.)
+    image: cloudflare/cloudflared:2026.10.7
+    restart: unless-stopped
     profiles: ["colab-tunnel"]
+    networks: ["edge"]
     command: tunnel --no-autoupdate --url http://worker-gateway:8080
     depends_on:
-      - worker-gateway
+      worker-gateway:
+        condition: service_healthy
 
   # Open-Dispatch (MIT): scheduler de publicacion para TikTok, Instagram y
   # YouTube. Se construye desde el repositorio oficial, fijado a un commit
@@ -113,7 +160,9 @@ services:
   # DATABASE_URL: el backend Postgres usa SELECT ... FOR UPDATE SKIP LOCKED sobre
   # la tabla open_dispatch_queue y si admite varios procesos.
   open-dispatch:
+    restart: unless-stopped
     profiles: ["dispatch"]
+    networks: ["edge"]
     build:
       context: https://github.com/Matthew-Selvam/Open-Dispatch.git#773dd54d4cec24a5995d8c722e9f02545cfba013
     environment:
@@ -139,7 +188,9 @@ services:
       retries: 10
 
   open-dispatch-worker:
+    restart: unless-stopped
     profiles: ["dispatch"]
+    networks: ["edge"]
     build:
       context: https://github.com/Matthew-Selvam/Open-Dispatch.git#773dd54d4cec24a5995d8c722e9f02545cfba013
     environment:
@@ -171,8 +222,14 @@ services:
   # esta disponible en Mixpost Pro o Cloud. Para usarlo hay que activar el
   # perfil "scheduler" y poner PUBLISHER_BACKEND=mixpost.
   mixpost:
-    image: inovector/mixpost:latest
+    # Version fijada: con 'latest' un 'docker compose pull' cambia el binario
+    # sin que nada lo detecte. (v2.6.0, verificada en el registry.)
+    image: inovector/mixpost:v2.6.0
+    restart: unless-stopped
     profiles: ["scheduler"]
+    # Mixpost habla con su MySQL y su Redis (red `db`) y con el navegador y el
+    # publisher (red `edge`).
+    networks: ["edge", "db"]
     environment:
       APP_NAME: Marketing Content OS
       APP_KEY: ${MIXPOST_APP_KEY:?Define MIXPOST_APP_KEY en .env}
@@ -204,7 +261,9 @@ services:
 
   mixpost-mysql:
     image: mysql/mysql-server:8.0
+    restart: unless-stopped
     profiles: ["scheduler"]
+    networks: ["db"]
     environment:
       MYSQL_DATABASE: ${MIXPOST_DB_NAME:-mixpost}
       MYSQL_USER: ${MIXPOST_DB_USER:-mixpost}
@@ -220,12 +279,22 @@ services:
 
   mixpost-redis:
     image: redis:7-alpine
+    restart: unless-stopped
     profiles: ["scheduler"]
+    networks: ["db"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+networks:
+  # Red de servicio: aqui viven los procesos que se hablan entre si (API,
+  # dashboard, publisher, gateway, tunel y schedulers) y los que se publican.
+  edge:
+  # Red de datos: solo los servicios que guardan estado y los que los consultan.
+  # El publisher no esta: no habla con ninguna base de datos.
+  db:
 
 volumes:
   pgdata:
