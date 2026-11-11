@@ -1,0 +1,5 @@
+accelerate>=1.8,<2
+gradio==6.15.1
+spaces>=0.40,<1
+transformers>=4.51,<5
+accelerate>=1.8,<2

@@ -1,0 +1,12 @@
+spaces>=0.40
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
+transformers>=5.10.0
+accelerate
+numpy
+pydub
+soundfile
+# app.py hace "from omnivoice import OmniVoice": sin esta dependencia el
+# Space falla al importar y la voz no se puede sintetizar.
+omnivoice>=0.2.1,<1
