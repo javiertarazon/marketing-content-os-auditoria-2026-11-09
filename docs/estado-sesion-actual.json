@@ -1,0 +1,274 @@
+{
+  "_meta": {
+    "proposito": "Resumen compacto de la sesion para retomar en otro chat sin releer todo el historico. El detalle exhaustivo esta en docs/estado-y-trazabilidad-marketing-content-os.json (manifiesto) y en docs/auditoria-2026-11-09.md (auditoria del 9-nov-2026).",
+    "fecha": "2026-11-09",
+    "repo": "D:/proyectos_javier/marketing-content-os",
+    "remoto": "https://github.com/javiertarazon/marketing-content-os.git (PUBLICO)",
+    "ultimo_commit": "8cc4d52 + rama fix/auditoria-2026-11-09",
+    "reglas_de_trabajo": "AGENTS.md en la raiz: idioma espanol, verificar por ejecucion, trazabilidad, pruebas obligatorias, git, PowerShell, Docker."
+  },
+  "objetivo": "Dejar el proyecto funcional al 100% y poder ejecutar el pipeline completo (nicho -> virales -> idea/gancho -> guion -> voz -> video -> aprobacion -> publicacion) probando modulo a modulo en esta maquina.",
+  "arquitectura_verificada": {
+    "api": "FastAPI en apps/api. 16 rutas: 6 exigen token de worker y 10 son publicas (medido con TestClient el 9-nov-2026). PostgreSQL. Estados de job: queued, running, succeeded, failed, awaiting_approval, approved, rejected. La migracion de la tabla jobs ya no reescribe la tabla en cada arranque.",
+    "cola_y_estado": "Tabla jobs. Un job de research, al completarse, crea su job hijo de render (parent_job_id).",
+    "guion": "HF Space privado javiertarazon-marketing-script-generator (Qwen3-1.7B CPU). api_name=generate. Tarda ~2 min.",
+    "voz": "HF Space privado javiertarazon-voice-studio-agent (OmniVoice k2-fsa). api_name=predict. Tarda ~9 min en CPU. Admite voz generica (genero/edad/tono) o clonada (muestra WAV + transcripcion).",
+    "video": "Remotion 4.0.448 en Node. Composicion MarketingShort, 1080x1920 a 30 fps. Necesita ffmpeg y Chromium.",
+    "medios": "Bucket R2 marketing-content-media. r2.dev publico por clave (verificado).",
+    "publicacion": "publisher-service -> Open-Dispatch (TikTok, Instagram, YouTube). Verificado end-to-end. SIN autenticacion (decision del usuario, ver AU-01 y AU-02).",
+    "datos_virales": "YouTube Data API con order=viewCount si hay YOUTUBE_API_KEY; si no, extractor propio sobre el HTML de resultados de YouTube."
+  },
+  "verificado_por_ejecucion": [
+    "131 tests passed (68 nuevos: workers, API y publisher). Antes eran 63. pyflakes 0. actionlint 0. next build OK.",
+    "Suite completa en el venv exacto de la CI (lockfile + dev + adapters + workers): 131 passed.",
+    "uv resuelve la instalacion de la CI: exit 0 en los dos pasos. Antes: ResolutionImpossible.",
+    "pip install --require-hashes del lockfile de la API: 36 paquetes, exit 0 (comando exacto del Dockerfile).",
+    "Las 16 rutas de la API medidas con TestClient sin Authorization: 6 con token (401), 10 abiertas.",
+    "Dispatch sin ninguna credencial contra un scheduler Open-Dispatch simulado: HTTP 200 y unidad encolada para tiktok e instagram. Ver AU-02.",
+    "Deriva de tipos del dashboard: al alterar el contrato a proposito el build falla con 8 errores TS2339; restaurado, vuelve a pasar.",
+    "MinIO: 'minio/minio' y 'minio/mc' devuelven 401 en el registry (MinIO borro sus repos de Docker Hub el 11-sep-2026). Las imagenes 'pgsty' devuelven 200 y son multi-arch."
+  ],
+  "defectos_encontrados_y_corregidos": [
+    {
+      "id": "AU-03",
+      "sev": "P0",
+      "que": "timedelta(months=...) no existe: la etapa de investigacion reventaba con cualquier video de hace mas de un mes (TypeError).",
+      "fix": "_parse_relative_time reescrito con tabla de patrones; los meses son 30 dias.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-04",
+      "sev": "P0",
+      "que": "Un solo fallo transitorio de heartbeat declaraba el lease perdido y tiraba hasta 30 minutos de trabajo ya invertido.",
+      "fix": "LeaseRenewer.renew_once() tolera 3 fallos consecutivos con backoff y solo pierde el lease ante un 409 o al agotarlos.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-05",
+      "sev": "P0",
+      "que": "El paso de actionlint de la CI corria antes de actions/checkout: actionlint salia con codigo 3 y el job moria en el primer paso.",
+      "fix": "El checkout se movio al principio y actionlint quedo despues.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-06",
+      "sev": "P0",
+      "que": "El paso 'Install dependencies' de la CI era irresoluble: gradio_client>=1.4,<2 en la API contra >=2,<3 en los adaptadores.",
+      "fix": "Se quita el pin de la API (nadie en apps/api lo importa) y se alinean los workers.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-07",
+      "sev": "P1",
+      "que": "El stack de compose no era alcanzable desde el runner: el servicio dind publicaba los puertos en su propio namespace de red.",
+      "fix": "Se elimina dind: el runner de GitHub ya trae el daemon de Docker.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-08",
+      "sev": "P1",
+      "que": "MinIO borro 'minio/minio' y 'minio/mc' de Docker Hub el 11-sep-2026: el stack de desarrollo no levantaba en una maquina limpia.",
+      "fix": "Se usan las imagenes 'pgsty', fijadas a version y verificadas en el registry.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-09",
+      "sev": "P1",
+      "que": "El gateway de workers era publico (Quick Tunnel sin Cloudflare Access) sin limite de ritmo, sin timeouts y sin limite de tamano de cuerpo.",
+      "fix": "limit_req y limit_conn por IP real, timeouts de proxy y cliente, client_max_body_size y sonda /healthz.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-10",
+      "sev": "P1",
+      "que": "nginx fijaba la IP del upstream: 502 en las tres rutas de worker tras recrear la API.",
+      "fix": "resolver 127.0.0.11 y upstream por variable, para que se re-resuelva.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-11",
+      "sev": "P1",
+      "que": "Los contenedores de la API y del dashboard corrian como root.",
+      "fix": "USER 1001:1001 en la API y USER node en el dashboard.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-12",
+      "sev": "P1",
+      "que": "La configuracion del publisher se leia con os.environ sueltos, sin validacion.",
+      "fix": "publisher_settings.py con pydantic-settings, mismos defaults y validacion.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-14",
+      "sev": "P1",
+      "que": "Unos 2.000 lineas de workers sin un solo test: los dos P0 de esta auditoria habrian salido con un test de una linea.",
+      "fix": "68 tests nuevos. Ademas se corrigio una fragilidad previa: el token del worker lo fijaba cada modulo de test al importarse y el resultado dependia del orden de recoleccion; ahora lo define tests/conftest.py.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-15",
+      "sev": "P1",
+      "que": "El fallo al descargar el MP4 para YouTube se reportaba como 'no se pudo conectar con el scheduler', senalando al servicio equivocado.",
+      "fix": "VideoStageError propio, con su mensaje y su codigo de respuesta.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-16",
+      "sev": "P1",
+      "que": "SSRF latente: el worker de render descargaba de una URL del request sin validar esquema ni host, y la metia en el MP4 publicado.",
+      "fix": "validate_audio_url con allowlist (STORAGE_PUBLIC_BASE_URL y R2_PUBLIC_HOSTS), antes de cualquier peticion saliente.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-17",
+      "sev": "P2",
+      "que": "init_database() dropea y recreaba la CHECK de estado en cada arranque: Postgres validaba la tabla entera y tomaba un lock ACCESS EXCLUSIVE.",
+      "fix": "ensure_job_status_constraint compara con pg_constraint y solo recrea si no coincide. La migracion de datos de 'progress' solo corre si falta la columna.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-19",
+      "sev": "P2",
+      "que": "El compose de produccion no tenia healthchecks ni politicas de reinicio.",
+      "fix": "restart: unless-stopped en todos los servicios, healthchecks donde serve HTTP y dependencias condicionadas a service_healthy.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-20",
+      "sev": "P2",
+      "que": "Todos los servicios compartian la red por defecto.",
+      "fix": "Redes segmentadas en 'edge' (servicios que se hablan o se publican) y 'db' (los que guardan estado). El publisher no esta en 'db'.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-22",
+      "sev": "P2",
+      "que": "python-multipart con cuatro vulnerabilidades high en el suelo del rango.",
+      "fix": "El suelo sube a >=0.0.30 (arregla las cuatro).",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-23",
+      "sev": "P2",
+      "que": "Sin lockfile de Python: las instalaciones no eran reproducibles.",
+      "fix": "apps/api/requirements.lock.txt con versiones exactas y hashes; la imagen de la API lo instala con --require-hashes.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-24",
+      "sev": "P2",
+      "que": "parse_view_count multiplicaba por diez las cifras en formato espanol ('1,2 M' daba 12.000.000) y la seleccion de virales se basaba en eso.",
+      "fix": "_parse_number distingue formato espanol e ingles.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-25",
+      "sev": "P2",
+      "que": "Prompt injection: el contenido de terceros se interpolaba sin sanear en el prompt del LLM y su salida se publica como guion.",
+      "fix": "sanitize_untrusted y bloque delimitado como contenido no confiable.",
+      "commit": "fix/auditoria-2026-11-09"
+    },
+    {
+      "id": "AU-37",
+      "sev": "P3",
+      "que": "Los tipos del dashboard se declaraban a mano y los tipos generados no se consumian.",
+      "fix": "Se versionan el esquema y los tipos, y los tipos del dashboard se derivan del contrato: un cambio en la API rompe el build.",
+      "commit": "fix/auditoria-2026-11-09"
+    }
+  ],
+  "tareas_pendientes": [
+    {
+      "id": "P0",
+      "tarea": "Autenticacion de la publicacion en TikTok/Instagram/YouTube",
+      "estado": "APL AZADO POR DECISION DEL USUARIO",
+      "dueno": "usuario",
+      "detalle": "AU-01 y AU-02: POST /v1/jobs/{id}/approve y /reject no exigen token, y POST /v1/publish del publisher tampoco. Probado end-to-end: un dispatch sin credencial llega al scheduler. El usuario decidio el 9-nov-2026 dejarlo asi hasta que todo lo demas este resuelto y se lo solicite explicitamente. Es la decision D1."
+    },
+    {
+      "id": "P1",
+      "tarea": "Verificar en la maquina de Javier lo que no se pudo verificar en el sandbox",
+      "estado": "PENDIENTE",
+      "dueno": "usuario",
+      "detalle": "Sin Docker no se pudo validar 'docker compose config' ni el arranque real de los contenedores no-root ni la sintaxis de nginx. Comandos sugeridos: 'docker compose -f docker-compose.dev.yml config' y 'docker compose --env-file .env -f infra/docker-compose.yml --profile publisher --profile dispatch config'."
+    },
+    {
+      "id": "P2",
+      "tarea": "Desbloquear la cuenta de GitHub (facturacion)",
+      "estado": "BLOQUEADO",
+      "dueno": "usuario",
+      "detalle": "Anotacion literal del check-run: 'The job was not started because your account is locked due to a billing issue'. Settings, Billing and plans, Payment information. Despues relanzar la CI con workflow_dispatch. Los tres bloqueadores propios del repositorio (CI-02, CI-03 y AU-08) ya estan corregidos."
+    },
+    {
+      "id": "P3",
+      "tarea": "Credenciales OAuth de las tres redes",
+      "estado": "BLOQUEADO",
+      "dueno": "usuario",
+      "detalle": "Faltan TIKTOK_ACCESS_TOKEN, IG_USER_ID, IG_TOKEN, YOUTUBE_CLIENT_SECRET y YOUTUBE_REFRESH_TOKEN en el .env. YOUTUBE_CLIENT_ID ya esta puesto: el valor 447002834549-mga4a7uvcpjtto2vfjncs8s8gki0rmmd.apps.googleusercontent.com es un OAuth client ID, NO una API key. YouTube es inmediato; Meta y TikTok tardan dias o semanas por la aprobacion de la developer app."
+    },
+    {
+      "id": "P4",
+      "tarea": "Probar el clonaje de voz con una muestra propia",
+      "estado": "PENDIENTE",
+      "dueno": "usuario",
+      "detalle": "Hace falta un WAV autorizado y su transcripcion exacta. Se sube como asset de tipo voice; ContentRequest exige ademas voice_clone_authorized en true."
+    },
+    {
+      "id": "P5",
+      "tarea": "Arreglar la busqueda de virales dentro del worker (no_results)",
+      "estado": "PENDIENTE",
+      "dueno": "agente",
+      "detalle": "En el worker la consulta fue GET /results con search_query=finanzas+personales y sp=CAM%253D y devolvio no_results, mientras que la funcion aislada si devuelve 6 resultados. Revisar el doble codificado del parametro sp y el User-Agent en apps/workers/viral_research.py."
+    },
+    {
+      "id": "P6",
+      "tarea": "Migrar los tipos del dashboard al contrato completo",
+      "estado": "PENDIENTE",
+      "dueno": "agente",
+      "detalle": "Los tipos del dashboard ahora se derivan del contrato, pero 'request', 'progress' y 'output' siguen siendo dict[str, Any] en el esquema Pydantic. Si se tipan en packages/python/core/schemas.py, el dashboard dejaria de necesitar los tipos de dominio locales."
+    }
+  ],
+  "credenciales_vacias_en_env": [
+    "TIKTOK_ACCESS_TOKEN",
+    "IG_USER_ID",
+    "IG_TOKEN",
+    "YOUTUBE_CLIENT_SECRET",
+    "YOUTUBE_REFRESH_TOKEN",
+    "YOUTUBE_API_KEY (opcional: el extractor de virales funciona sin ella)"
+  ],
+  "comandos_para_continuar": {
+    "levantar_docker": "Start-Process 'C:/Users/javie/AppData/Local/Programs/DockerDesktop/Docker Desktop.exe'",
+    "levantar_la_pila": "docker compose --project-directory infra --env-file .env -f infra/docker-compose.yml --profile publisher --profile dispatch up -d",
+    "research": "python apps/workers/local_research_worker.py --once --topic 'nicho' --create-job --verbose",
+    "render": "python apps/workers/local_render_worker.py --once --verbose",
+    "aprobar": "curl.exe -X POST http://127.0.0.1:8000/v1/jobs/ID/approve -d '{\\\"publish\\\": true}' -H 'Content-Type: application/json'",
+    "estado": "python _audit_recover/estado_pipeline.py",
+    "tests": ".venv/Scripts/python -m pytest -q con cwd en la raiz del repo",
+    "nota_importante": "El .env tiene API_BASE_URL con el placeholder api.example.com. Los workers locales lo ignoran y usan http://127.0.0.1:8000; ese valor solo importa para Colab, que necesita el tunel HTTPS de Cloudflare."
+  },
+  "ficheros_clave": {
+    "apps/api/main.py": "API, puerta de aprobacion (approve y reject) y encolado del render hijo.",
+    "apps/api/settings.py": "resolve_env_file() y las variables PUBLISHER_BASE_URL y STORAGE_PUBLIC_BASE_URL.",
+    "packages/python/core/schemas.py": "JobStatus con los tres estados nuevos, JobApproval y JobRejection.",
+    "apps/dashboard/app/page.tsx": "Botones Aprobar y Rechazar, y resultado de la publicacion.",
+    "apps/workers/": "Workers locales de research y render (nuevos).",
+    "apps/voice-studio-space/requirements.txt": "omnivoice anadido.",
+    "infra/docker-compose.yml": "PUBLISHER_BASE_URL para la api y healthcheck del worker desactivado.",
+    "notebooks/01_research_scrapegraph.ipynb": "Worker de research original de Colab.",
+    "notebooks/02_render_remotion.ipynb": "Worker de render original de Colab; escribe el proyecto Remotion.",
+    "docs/estado-y-trazabilidad-marketing-content-os.json": "Manifiesto completo de trazabilidad.",
+    "AGENTS.md": "Instrucciones globales de trabajo."
+  },
+  "gotchas": [
+    "curl.exe mete BOM: al canalizar su salida a Python falla con 'Unexpected UTF-8 BOM'. Usar urllib o curl con -o fichero.",
+    "PowerShell 5.1 no tiene && ni ||; npm se invoca como npm.cmd.",
+    "El README mezcla CRLF y LF con una sola linea en LF: hay que restaurarla con _audit_recover/fix_readme_eol2.py tras editarlo.",
+    "POST /v1/jobs ignora el campo script: ContentRequest no lo tiene. El guion solo llega en el output del research, que la API copia al job hijo.",
+    "DATABASE_URL del .env usa el host postgres (Docker); desde Windows hay que cambiarlo a 127.0.0.1:5432.",
+    "winget anade ffmpeg al PATH del sistema pero una terminal ya abierta no lo ve.",
+    "Docker Desktop se apaga solo en esta maquina: hay que relanzarlo antes de cada tanda.",
+    "MinIO ya no publica imagenes en Docker Hub (las borro el 11-09-2026): el compose de dev usa las de la comunidad 'pgsty'.",
+    "El token del worker lo define tests/conftest.py: si un modulo de test lo fija al importarse, el resultado de la suite depende del orden de recoleccion.",
+    "Los tipos del dashboard se derivan de apps/dashboard/types/api.ts: si cambias el contrato de la API, regenera ese fichero (scripts/generate_api_types.sh) o el build falla."
+  ]
+}

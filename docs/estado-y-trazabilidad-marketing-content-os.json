@@ -1,0 +1,2097 @@
+{
+  "schema_version": "2.2.0",
+  "generado_en": "2026-11-09T18:40:00+00:00",
+  "generado_por": "Auditoria tecnica del 9-nov-2026 con verificacion por ejecucion (Mavis) y correccion de los hallazgos aplicables",
+  "proposito": "Manifiesto de trazabilidad para agentes: de donde viene el proyecto, que cambios se aplicaron, en que nivel esta cada componente y que falta para que funcione al 100%.",
+  "project": {
+    "name": "Marketing Content OS",
+    "remote": "https://github.com/javiertarazon/marketing-content-os.git",
+    "local_path": "D:\\proyectos_javier\\marketing-content-os",
+    "branch": "main",
+    "descripcion": "Pipeline de contenido para redes: investigacion con scraping + LLM, guion, voz clonada, render de video y publicacion. API FastAPI + workers de Colab + dashboard Next.js + publisher-service contra Open-Dispatch (MIT), que encola en TikTok, Instagram y YouTube."
+  },
+  "project_origin": {
+    "situacion_inicial": "El working tree estaba VACIO: no existia ni un archivo de aplicacion. El directorio solo conservaba .git/objects (sin HEAD, config ni refs), un .venv con layout de Linux, apps/dashboard/node_modules con una sola entrada y los clones de third_party.",
+    "recuperacion": "Se descomprimieron los 258 objetos sueltos del object store (12 commits, 152 blobs, 94 trees), se reconstruyo el arbol del commit mas reciente y se restauraron 71 archivos. El historial se preservo: main quedo en e0acb49f84f1db61edbf6f5de11c8a6389170589.",
+    "bloqueo_tecnico": "Git rechazaba el repositorio con 'dubious ownership': el directorio pertenece al SID de la maquina original (S-1-5-21-2579193798-...) y el usuario actual es javie. Se resolvio con git config --global --add safe.directory.",
+    "commits": [
+      {
+        "sha": "be2c44941830b178645ccdcc8bcce41202aac89d",
+        "sha_short": "be2c449418",
+        "date": "2026-10-14T13:57:38-04:00",
+        "author": "javiertarazon",
+        "subject": "Initial import of Marketing Content OS",
+        "recovered": true
+      },
+      {
+        "sha": "43df30848042cf143ad42ecdfea919b378a543a6",
+        "sha_short": "43df308480",
+        "date": "2026-10-14T14:31:39-04:00",
+        "author": "javiertarazon",
+        "subject": "Upgrade dashboard and lock secure dependencies",
+        "recovered": true
+      },
+      {
+        "sha": "9f8570f3d835395f82a78f0b19b09ab0bdb870f5",
+        "sha_short": "9f8570f3d8",
+        "date": "2026-10-14T15:32:47-04:00",
+        "author": "javiertarazon",
+        "subject": "Replace OpenAI and Postiz with HF and Mixpost",
+        "recovered": true
+      },
+      {
+        "sha": "38cf5ae4b3dfbcddf356c142a98362b16bb019db",
+        "sha_short": "38cf5ae4b3",
+        "date": "2026-10-14T17:48:13-04:00",
+        "author": "javiertarazon",
+        "subject": "Set deployed script Space URL",
+        "recovered": true
+      },
+      {
+        "sha": "06c6bac70c4e8e93f349af30e9ff80e148db28e8",
+        "sha_short": "06c6bac70c",
+        "date": "2026-10-14T18:26:00-04:00",
+        "author": "javiertarazon",
+        "subject": "Enable local Colab worker orchestration",
+        "recovered": true
+      },
+      {
+        "sha": "92644b38828b3c5930df85a3f4179e147a97a915",
+        "sha_short": "92644b3882",
+        "date": "2026-10-14T21:44:30-04:00",
+        "author": "javiertarazon",
+        "subject": "Document",
+        "recovered": true
+      },
+      {
+        "sha": "7ecbe21d8d89c60b12543619f9d5c48e98163bf4",
+        "sha_short": "7ecbe21d8d",
+        "date": "2026-10-17T00:05:05-04:00",
+        "author": "javiertarazon",
+        "subject": "fix: complete_job status, viral hook prompt, publisher compose and system docs",
+        "recovered": true
+      },
+      {
+        "sha": "57d1284d9505130c1d9d86772ae4a5f0b5497b21",
+        "sha_short": "57d1284d95",
+        "date": "2026-10-18T12:42:20-04:00",
+        "author": "javiertarazon",
+        "subject": "docs: document verified app state and improvements",
+        "recovered": true
+      },
+      {
+        "sha": "6ea4496ef7094887b3d817eee4df980e4acb8f90",
+        "sha_short": "6ea4496ef7",
+        "date": "2026-10-18T13:53:50-04:00",
+        "author": "javiertarazon",
+        "subject": "feat: orchestrate continuous Colab workers",
+        "recovered": true
+      },
+      {
+        "sha": "27c2b8e017c154dc7ee07fcf4c658a425e99f440",
+        "sha_short": "27c2b8e017",
+        "date": "2026-10-18T14:03:23-04:00",
+        "author": "javiertarazon",
+        "subject": "docs: document current end-to-end readiness",
+        "recovered": true
+      },
+      {
+        "sha": "1e1d0177af9f907fe5361d5c591d366e6b773594",
+        "sha_short": "1e1d0177af",
+        "date": "2026-10-21T13:52:48-04:00",
+        "author": "javiertarazon",
+        "subject": "chore: improve test config, add strict settings, generate TS types, provide dev compose",
+        "recovered": true
+      },
+      {
+        "sha": "e0acb49f84f1db61edbf6f5de11c8a6389170589",
+        "sha_short": "e0acb49f84",
+        "date": "2026-10-21T14:25:39-04:00",
+        "author": "javiertarazon",
+        "subject": "chore: add CI workflow for notebooks, Makefile tunnel target",
+        "recovered": true
+      }
+    ]
+  },
+  "current_state": {
+    "apps/api": {
+      "nivel": "funcional",
+      "estado": "La API importa, valida su configuracion, expone 16 rutas y su suite completa pasa. La migracion de la tabla jobs ya no reescribe la tabla en cada arranque.",
+      "verificado": "import main OK; 131/131 tests; 16 rutas medidas con TestClient (6 con token, 10 sin); la migracion de la CHECK es idempotente."
+    },
+    "apps/publisher-service": {
+      "nivel": "funcional_condicionado",
+      "estado": "Publica contra Open-Dispatch (MIT). La configuracion se valida con pydantic-settings (publisher_settings.py) y el fallo de descarga del MP4 ya no se reporta como un problema de conexion con el scheduler. La publicacion REAL sigueDepending de las credenciales OAuth de TikTok, Instagram y YouTube, que siguen vacias en el .env.",
+      "verificado": "tests/test_publisher_settings.py; scripts/smoke_publisher.py devuelve SMOKE OK; dispatch encolado contra un scheduler simulado."
+    },
+    "apps/dashboard": {
+      "nivel": "funcional",
+      "estado": "Consume rutas existentes de la API. NEXT_PUBLIC_* se hornea en build time.",
+      "verificado": "Contrato de rutas revisado uno a uno contra apps/api/main.py."
+    },
+    "notebooks": {
+      "nivel": "funcional_condicionado",
+      "estado": "Los workers compilan y funcionan fuera de Colab. Requieren Secrets, API publica por HTTPS y los Spaces privados.",
+      "verificado": "Celdas de codigo compiladas; import re corregido; secretos con fallback a entorno."
+    },
+    "infra/docker": {
+      "nivel": "funcional",
+      "estado": "Los dos compose parsean. El de dev ya no usa las imagenes de MinIO retiradas de Docker Hub, los defaults de postgres coinciden con los de la API, los servicios declaran restart y healthchecks, y las redes estan segmentadas en edge y db.",
+      "verificado": "YAML parseado y topologia comprobada servicio por servicio. NO VERIFICADO con 'docker compose config': el entorno de auditoria no tiene Docker."
+    },
+    "ci": {
+      "nivel": "funcional",
+      "estado": "El workflow es valido y sus tres bloqueadores estan corregidos (orden del checkout, conflicto de dependencias y acceso al stack). Sigue sin poder ejecutarse en GitHub hasta que se regularice la facturacion de la cuenta, que es externa al repositorio.",
+      "verificado": "actionlint v1.7.12 exit 0; uv resuelve la instalacion completa (exit 0 en los dos pasos); las 131 pruebas pasan con las versiones bloqueadas."
+    },
+    "spaces": {
+      "nivel": "parcial",
+      "estado": "Los cuatro Spaces (script-generator, voice-studio, hyperframes, open-gen-ai) implementan el protocolo del API, pero el parseo del nombre de modelo en script-generator es fragil y hyperframes/open-gen-ai no estan conectados al pipeline.",
+      "verificado": "Analisis por lectura cruzada con el contrato del API."
+    },
+    "apps/workers": {
+      "nivel": "funcional",
+      "estado": "Workers locales de research y render con el lease tolerante a fallos transitorios, la investigacion reparada (fechas relativas y numero de vistas en formato espanol), el prompt saneado contra inyeccion y la validacion anti-SSRF de la URL de audio. Ahora tienen cobertura de tests.",
+      "verificado": "68 tests nuevos en tests/test_workers_*.py; suite completa en 131 tests."
+    },
+    "dashboard": {
+      "nivel": "funcional",
+      "estado": "Los tipos se derivan del contrato OpenAPI generado: si la API cambia un campo, el build falla en vez de que el dashboard se quede desincronizado en silencio.",
+      "verificado": "next build exit 0. La proteccion se comprobó alterando el contrato a proposito: 8 errores TS2339 y build exit 1."
+    }
+  },
+  "changes": [
+    {
+      "id": "P0-01",
+      "severity": "P0",
+      "area": "apps/api",
+      "title": "NameError en el arranque: get_settings nunca fue importado",
+      "file": "apps/api/main.py",
+      "lines": "32",
+      "problem": "`settings = get_settings()` llamaba a un nombre inexistente. El import de la API moria con NameError y pytest no recolectaba nada (2 errores de coleccion, suite interrumpida). Ademas `settings` ligaba el MODULO, no la instancia (AttributeError en settings.DATABASE_URL).",
+      "evidence": "pytest: 'ERROR tests/test_api_progress.py - NameError: name get_settings is not defined'; 'ERROR tests/test_media_assets.py'; '2 errors during collection'.",
+      "fix": "Sustituir `import settings` + `settings_obj` por `from settings import get_settings` y `settings = get_settings()`. La variable `settings_obj` era codigo muerto.",
+      "status": "aplicado",
+      "verification": "import main OK; 31/31 tests pasan."
+    },
+    {
+      "id": "P0-02",
+      "severity": "P0",
+      "area": "apps/api",
+      "title": "El .env nunca se leia: parents[3] apuntaba fuera del repositorio",
+      "file": "apps/api/settings.py",
+      "lines": "52",
+      "problem": "env_file=Path(__file__).parents[3] / '.env'. parents[0]=apps/api, [1]=apps, [2]=raiz del repo, [3]=padre del repo. El fichero buscado estaba un nivel por encima del repositorio, asi que la configuracion nunca se cargaba.",
+      "evidence": "Con un .env valido en la raiz del repo: '6 validation errors for Settings: DATABASE_URL / API_BASE_URL / S3_* Field required'.",
+      "fix": "Corregido a parents[2].",
+      "status": "aplicado",
+      "verification": "Settings se carga desde D:\\proyectos_javier\\marketing-content-os\\.env."
+    },
+    {
+      "id": "P0-03",
+      "severity": "P0",
+      "area": "apps/api",
+      "title": "extra='forbid' incompatible con el .env compartido del proyecto",
+      "file": "apps/api/settings.py",
+      "lines": "55",
+      "problem": "El .env lo comparten PostgreSQL, Mixpost, el dashboard y los workers (15+ variables). Con extra='forbid' pydantic-settings aborta el arranque por cada clave que no sea campo de Settings.",
+      "evidence": "13 errores 'Extra inputs are not permitted' (POSTGRES_*, REDIS_URL, MIXPOST_*, STORAGE_PUBLIC_BASE_URL, NEXT_PUBLIC_API_BASE_URL).",
+      "fix": "extra='ignore'. La validacion estricta de los campos declarados se mantiene.",
+      "status": "aplicado",
+      "verification": "La API arranca con el .env real del repositorio."
+    },
+    {
+      "id": "P0-04",
+      "severity": "P0",
+      "area": "apps/api",
+      "title": "API_BASE_URL obligatorio y con HTTPS, pero nunca usado por la API",
+      "file": "apps/api/settings.py",
+      "lines": "30",
+      "problem": "Settings.API_BASE_URL no se lee en ningun punto de main.py, pero era obligatorio, exigia https:// y no figuraba en ningun .env.example: bloqueaba el arranque con 'Field required'. Si lo necesitan son los workers (Colab).",
+      "evidence": "grep sobre todo apps/api/main.py: 0 lecturas de API_BASE_URL.",
+      "fix": "Pasa a Optional[str] = None; el validador HTTPS se aplica solo cuando se define y una cadena vacia equivale a 'no configurada'.",
+      "status": "aplicado",
+      "verification": "import main OK sin API_BASE_URL; documentado en .env.example y .env."
+    },
+    {
+      "id": "P0-05",
+      "severity": "P0",
+      "area": "infra/docker",
+      "title": "La imagen de la API no contenia settings.py y faltaba pydantic-settings",
+      "file": "apps/api/Dockerfile",
+      "lines": "7",
+      "problem": "El Dockerfile copiaba main.py y packages/python/core, pero no settings.py -> ModuleNotFoundError: No module named 'settings'. Ademas requirements.txt no declaraba pydantic-settings, que settings.py importa.",
+      "evidence": "apps/api/requirements.txt no contenia 'pydantic-settings'.",
+      "fix": "COPY apps/api/settings.py . y pydantic-settings>=2.5,<3 en requirements.txt.",
+      "status": "aplicado",
+      "verification": "Contenido del Dockerfile y requirements.txt comprobados."
+    },
+    {
+      "id": "P0-06",
+      "severity": "P0",
+      "area": "apps/api",
+      "title": "Dos fuentes de verdad para la configuracion: os.environ vs Settings",
+      "file": "apps/api/main.py",
+      "lines": "62-66",
+      "problem": "main.py sobrescribia los valores validados con os.environ.get(...). pydantic-settings lee el .env pero NO inyecta en os.environ, asi que con un .env correcto la API arrancaba con DATABASE_URL vacio, 503 en toda subida de medios y KeyError en el bucket. JOB_LEASE_SECONDS, MAX_JOB_ATTEMPTS y MAX_ASSET_BYTES quedaban congelados en constantes.",
+      "evidence": "Settings OK desde .env -> S3_BUCKET=bucket; os.environ S3_BUCKET -> None; main.DATABASE_URL -> ''; get_storage_client() -> HTTP 503; upload_asset -> KeyError: 'S3_BUCKET'.",
+      "fix": "Eliminado el bloque os.environ; todo el codigo usa settings.*. CORS_ORIGINS paso a ser campo de Settings.",
+      "status": "aplicado",
+      "verification": "main.DATABASE_URL y settings.S3_BUCKET correctos con el .env real."
+    },
+    {
+      "id": "P0-07",
+      "severity": "P0",
+      "area": "notebooks",
+      "title": "import re ausente: el worker de investigacion no podia completar",
+      "file": "notebooks/01_research_scrapegraph.ipynb",
+      "lines": "celda de codigo 3",
+      "problem": "La celda que arma el guion llama re.fullmatch(...) para validar la salida del LLM, pero re no estaba importado. El job fallaba con NameError DESPUES de consumir la busqueda web y la llamada al LLM: coste y tiempo perdidos y ningun audio producido.",
+      "evidence": "pyflakes/inspeccion del .ipynb: 'import re' ausente; unica coincidencia de re. en la celda 449 del volcado de texto.",
+      "fix": "Anadido 'import re' a la celda de imports.",
+      "status": "aplicado",
+      "verification": "Las dos celdas de codigo de ambos notebooks compilan (compile())."
+    },
+    {
+      "id": "P0-08",
+      "severity": "P0",
+      "area": "infra/docker",
+      "title": "El stack de desarrollo no construia ni arrancaba",
+      "file": "docker-compose.dev.yml",
+      "lines": "api, dashboard, minio",
+      "problem": "Cuatro fallos encadenados: (a) context: ./apps/api pero el Dockerfile copia packages/python/core, fuera del contexto -> 'COPY failed'; (b) command: uvicorn apps.api.main:app, modulo inexistente en la imagen; (c) volumes: .:/app montaba la raiz del repo sobre /app y ocultaba main.py y core; (d) el servicio dashboard montaba la raiz del repo donde no hay package.json y corria npm install ahi.",
+      "evidence": "Inspeccion de compose: context ./apps/api frente a COPY packages/python/core; comando apps.api.main:app frente a main.py en /app.",
+      "fix": "context en la raiz del repositorio, comando 'uvicorn main:app', volumenes por directorio (./apps/api:/app + ./packages/python/core:/app/core; ./apps/dashboard:/app + volumen anonimo para node_modules), servicio minio-init que crea el bucket, healthcheck en la API y S3_ENDPOINT_URL local permitido por HTTP.",
+      "status": "aplicado",
+      "verification": "docker compose config -> OK."
+    },
+    {
+      "id": "P0-09",
+      "severity": "P0",
+      "area": "ci",
+      "title": "El workflow de CI fallaba siempre",
+      "file": ".github/workflows/notebook-ci.yml",
+      "lines": "46, 52, 76-90",
+      "problem": "Cuatro causas: (a) referenciaba infra/docker-compose.dev.yml, que no existe (esta en la raiz); (b) usaba jupyter nbconvert sin instalar jupyter; (c) cp .env.example .env generaba una configuracion con la que la API no arrancaba; (d) el bucle de espera no fallaba si la API nunca sanaba (sin exit 1) y usaba curl -s sin -f, de modo que un 503 contaba como 'OK'.",
+      "evidence": "El fichero infra/docker-compose.dev.yml no existe; el repo solo tiene docker-compose.dev.yml en la raiz.",
+      "fix": "Ruta correcta del compose, paso real de pytest, build del dashboard, validacion de que las celdas de los notebooks compilan, espera con curl -fsS y exit 1, y smoke test del protocolo worker.",
+      "status": "aplicado",
+      "verification": "YAML valido; pasos coherentes con el estado real del repositorio."
+    },
+    {
+      "id": "P0-10",
+      "severity": "P0",
+      "area": "seguridad",
+      "title": "8 de 14 rutas de la API sin autenticacion",
+      "file": "apps/api/main.py",
+      "lines": "rutas /v1/jobs, /v1/assets, /v1/workers, media",
+      "problem": "Solo las 6 rutas de worker exigen Authorization: Bearer. El resto permitia a cualquiera crear jobs sin limite (DoS contra los workers y bloating de la BD), subir ficheros de hasta 250 MB ilimitadamente a R2 y leer todos los jobs con URLs prefirmadas de R2 (ExpiresIn=300).",
+      "evidence": "Introspeccion del arbol de rutas de FastAPI: 8 rutas con 'SIN AUTENTICACION'.",
+      "fix": "NO CORREGIDO: cambia el modelo de producto (API publica de dashboard vs API privada de workers).",
+      "status": "pendiente_decision",
+      "verification": "Decision D1 documentada en docs/auditoria-2026-11.md."
+    },
+    {
+      "id": "P0-11",
+      "severity": "P0",
+      "area": "seguridad",
+      "title": "POST /v1/publish sin autenticacion en el publisher-service",
+      "file": "apps/publisher-service/main.py",
+      "lines": "/v1/publish",
+      "problem": "No exige ningun token: cualquiera que alcance el puerto publica en las cuentas sociales conectadas.",
+      "evidence": "Ruta publish sin dependencias de seguridad.",
+      "fix": "NO CORREGIDO: misma decision D1.",
+      "status": "pendiente_decision",
+      "verification": "Decision D1 documentada."
+    },
+    {
+      "id": "P0-12",
+      "severity": "P0",
+      "area": "integracion",
+      "title": "El publisher hablaba la API de Postiz contra un servidor Mixpost",
+      "file": "apps/publisher-service/adapters/postiz_adapter.py",
+      "lines": "todo el modulo",
+      "problem": "El repositorio migro a Mixpost pero conservo el adaptador de Postiz. LA API DE MIXPOST NO ES COMPATIBLE CON LA DE POSTIZ: distinta base, distinto esquema de autenticacion, ids de cuenta numericos, medios por id numerico y payload 'versions' en vez de 'posts'. El adaptador habria recibido 404 en todas las llamadas.",
+      "evidence": "Contrato verificado contra la especificacion OpenAPI oficial de Mixpost (https://docs.mixpost.app/api/).",
+      "fix": "Sustituido por apps/publisher-service/adapters/mixpost_adapter.py, reescrito contra el contrato real. Adaptador y test de Postiz eliminados.",
+      "status": "aplicado",
+      "verification": "tests/test_mixpost_adapter.py: 5 tests que verifican el payload real (accounts/versions/media numerico/options por proveedor/programacion con timezone). 31/31 tests pasan."
+    },
+    {
+      "id": "P0-13",
+      "severity": "P0",
+      "area": "infra/docker",
+      "title": "El perfil 'publisher' era un proyecto de compose invalido",
+      "file": "infra/docker-compose.yml",
+      "lines": "55, 85",
+      "problem": "publisher declaraba depends_on: mixpost, pero mixpost vivia en el perfil 'scheduler' y el publisher en el perfil 'publisher'. Activar solo --profile publisher fallaba con 'service \"publisher\" depends on undefined service \"mixpost\": invalid compose project'.",
+      "evidence": "docker compose --profile publisher config -> error de dependencia indefinida.",
+      "fix": "mixpost, mixpost-mysql y mixpost-redis declaran profiles: ['scheduler', 'publisher'].",
+      "status": "aplicado",
+      "verification": "docker compose config con los tres perfiles -> OK."
+    },
+    {
+      "id": "P1-01",
+      "severity": "P1",
+      "area": "apps/dashboard",
+      "title": "NEXT_PUBLIC_* se hornea en build time",
+      "file": "apps/dashboard/Dockerfile",
+      "lines": "4-7",
+      "problem": "Las variables NEXT_PUBLIC_* se inlinean en el bundle en tiempo de build. Con el valor por defecto http://localhost:8000, el navegador del usuario recibiria un bundle que apunta a localhost y todos los fetch fallarian en produccion.",
+      "evidence": "ARG/ENV en el Dockerfile fijan el valor por defecto.",
+      "fix": "Valores por defecto reales y documentacion de --build-arg; infra/docker-compose.yml los pasa desde el .env.",
+      "status": "aplicado",
+      "verification": "docker compose config muestra los argumentos correctos."
+    },
+    {
+      "id": "P1-02",
+      "severity": "P1",
+      "area": "apps/dashboard",
+      "title": "?? no cubre una cadena vacia: enlace a Mixpost roto",
+      "file": "apps/dashboard/app/page.tsx",
+      "lines": "61",
+      "problem": "process.env.NEXT_PUBLIC_MIXPOST_URL ?? 'http://localhost:3002' solo cubre null/undefined; el ARG por defecto era cadena vacia, de modo que href quedaba '' (enlace a la propia pagina).",
+      "evidence": "ARG NEXT_PUBLIC_MIXPOST_URL= (vacio) en el Dockerfile.",
+      "fix": "?? -> || y valor por defecto real en el ARG.",
+      "status": "aplicado",
+      "verification": "page.tsx:61 usa ||."
+    },
+    {
+      "id": "P1-03",
+      "severity": "P1",
+      "area": "scripts",
+      "title": "El smoke test ignoraba las variables de entorno",
+      "file": "scripts/smoke_local_pipeline.py",
+      "lines": "smoke_private_storage, clean_test_jobs",
+      "problem": "Leia credenciales solo del .env, ignorando el entorno, de modo que en CI conectaba a la base de datos equivocada y no al stack levantado por compose.",
+      "evidence": "env.get(...) sin mirar os.environ.",
+      "fix": "Funcion resolve(): entorno > .env, tambien para las variables de Postgres.",
+      "status": "aplicado",
+      "verification": "Codigo revisado; el CI exporta las variables del stack."
+    },
+    {
+      "id": "P1-04",
+      "severity": "P1",
+      "area": "apps/api",
+      "title": "HTTPS exigido sin excepcion para S3_ENDPOINT_URL",
+      "file": "apps/api/main.py",
+      "lines": "99",
+      "problem": "Impodia usar MinIO en desarrollo (HTTP) devolviendo 503 en cada subida, aunque el compose de dev lo incluia.",
+      "evidence": "El servicio minio servia HTTP y la API lo rechazaba.",
+      "fix": "HTTP permitido solo para hosts locales (localhost, 127.0.0.1, ::1, minio, 0.0.0.0); fuera de localhost sigue exigiendose HTTPS.",
+      "status": "aplicado",
+      "verification": "docker compose config + logica de get_storage_client."
+    },
+    {
+      "id": "P1-05",
+      "severity": "P1",
+      "area": "infra/docker",
+      "title": "infra/.env.production.example no permitia interpolar el compose",
+      "file": "infra/.env.production.example",
+      "lines": "completo",
+      "problem": "El compose de infra exige MIXPOST_APP_KEY, MIXPOST_DB_PASSWORD, MIXPOST_DB_ROOT_PASSWORD y POSTGRES_PASSWORD, y el ejemplo no definia ninguna -> 'error while interpolating services.mixpost.environment.APP_KEY: required variable MIXPOST_APP_KEY is missing a value'.",
+      "evidence": "docker compose config con el ejemplo -> 5 errores de interpolacion.",
+      "fix": "Ejemplo completado con todas las variables de Mixpost, Postgres y Next.",
+      "status": "aplicado",
+      "verification": "docker compose --env-file .env -f infra/docker-compose.yml config -> OK."
+    },
+    {
+      "id": "P1-06",
+      "severity": "P1",
+      "area": "tests",
+      "title": "La suite no corria sin infraestructura de produccion",
+      "file": "tests/",
+      "lines": "tests/conftest.py (nuevo)",
+      "problem": "import main instancia Settings() a nivel de modulo, asi que la suite exigia DATABASE_URL, WORKER_API_TOKEN y las cuatro variables S3. Sin ellas, pytest abortaba en la coleccion.",
+      "evidence": "2 errores de coleccion por ValidationError de Settings.",
+      "fix": "tests/conftest.py inyecta valores minimos ficticios con os.environ.setdefault antes de importar main.",
+      "status": "aplicado",
+      "verification": "pytest -q -> 31 passed."
+    },
+    {
+      "id": "P1-07",
+      "severity": "P1",
+      "area": "notebooks",
+      "title": "Los workers no se podian ejecutar fuera de Colab",
+      "file": "notebooks/01_research_scrapegraph.ipynb, notebooks/02_render_remotion.ipynb",
+      "lines": "celda de secretos",
+      "problem": "'from google.colab import userdata' sin try/except -> ModuleNotFoundError en local o CI. Los workers no se podian probar automaticamente.",
+      "evidence": "Import sin proteccion en ambos notebooks.",
+      "fix": "_read_secret(name) con fallback a os.environ en ambos notebooks.",
+      "status": "aplicado",
+      "verification": "Ambas celdas compilan; el CI valida la compilacion."
+    },
+    {
+      "id": "P1-08",
+      "severity": "P1",
+      "area": "apps/api",
+      "title": "CORS: origenes distintos entre el default y el puerto publicado",
+      "file": "apps/api/settings.py",
+      "lines": "CORS_ORIGINS",
+      "problem": "El default era http://localhost:3001 pero el compose publica 127.0.0.1:3001. Son origenes distintos para el navegador, que bloquea todos los fetch en silencio.",
+      "evidence": "Compose: '127.0.0.1:3000:3000' y el dashboard en 3001; default del setting solo con localhost.",
+      "fix": "Default con ambos hosts y CORS_ORIGINS como campo de Settings.",
+      "status": "aplicado",
+      "verification": "api.cors_origins lee de settings."
+    },
+    {
+      "id": "P1-09",
+      "severity": "P1",
+      "area": "tests",
+      "title": "El test de assets parcheaba una variable que el codigo ya no leia",
+      "file": "tests/test_media_assets.py",
+      "lines": "83, 152",
+      "problem": "monkeypatch.setenv('S3_BUCKET', ...) dejo de tener efecto al unificar la configuracion en settings.",
+      "evidence": "1 test fallaba tras unificar la fuente de verdad.",
+      "fix": "El test parchea tambien api.settings.S3_BUCKET.",
+      "status": "aplicado",
+      "verification": "31/31 tests pasan."
+    },
+    {
+      "id": "P1-10",
+      "severity": "P1",
+      "area": "seguridad",
+      "title": "La URL del video se validaba despues de llamar a Mixpost",
+      "file": "apps/publisher-service/adapters/mixpost_adapter.py",
+      "lines": "create_post",
+      "problem": "El origen del video se comprobaba dentro del envio, de modo que una URL no permitida ya habia generado trafico hacia Mixpost.",
+      "evidence": "El test de host no permitido fallaba porque antes se hacian las llamadas al workspace y a las cuentas.",
+      "fix": "La validacion se ejecuta antes de cualquier peticion saliente (fail fast, sin trafico).",
+      "status": "aplicado",
+      "verification": "test_create_post_rejects_video_outside_configured_storage_host pasa."
+    },
+    {
+      "id": "P2-01",
+      "severity": "P2",
+      "area": "apps/api",
+      "title": "Sin pool de conexiones: una conexion TCP nueva por request",
+      "file": "apps/api/main.py",
+      "lines": "80-83",
+      "problem": "get_connection() abre una conexion psycopg nueva en cada peticion. Verificado que NO hay fuga (psycopg 3.3.7 cierra la conexion al salir del with), pero si hay coste de conexion por request y riesgo de agotar max_connections con concurrencia.",
+      "evidence": "psycopg.Connection.__exit__ llama a self.close() en la version instalada (3.3.7).",
+      "fix": "Recomendado: psycopg_pool.ConnectionPool.",
+      "status": "pendiente",
+      "verification": "Analizado; no es bloqueante de arranque."
+    },
+    {
+      "id": "P2-02",
+      "severity": "P2",
+      "area": "packages/python",
+      "title": "El adaptador de voz no puede funcionar contra su Space",
+      "file": "packages/python/adapters/voicestudio_adapter.py",
+      "lines": "47+",
+      "problem": "El Space voice-studio expone generate_voice con 6 entradas (text, gender, age, pitch, reference_path, reference_transcript) y devuelve gr.Audio (numpy). El adaptador envia 4 argumentos y espera una ruta WAV (str). Solo lo usa su propio test, que mockea el cliente: el test define el contrato en vez de verificarlo. El pipeline real no lo usa (los notebooks llaman al Space con los 6 argumentos).",
+      "evidence": "voice-studio-space/app.py: 6 parametros; adaptador: client.predict(text=..., gender=..., age=..., pitch=...) y comprobacion isinstance(result, str).",
+      "fix": "Codigo muerto con contrato incorrecto. Opcional: alinear el adaptador o eliminarlo.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura cruzada."
+    },
+    {
+      "id": "P2-03",
+      "severity": "P2",
+      "area": "apps/dashboard",
+      "title": "href con URL de terceros sin validar el esquema",
+      "file": "apps/dashboard/app/page.tsx",
+      "lines": "397",
+      "problem": "source.url proviene del scraping y se pasa a href sin validar el esquema; un javascript: scraped se ejecutaria al hacer clic. rel='noreferrer' no lo previene.",
+      "evidence": "href={source.url} con source.url来自 las fuentes scrapeadas.",
+      "fix": "Validar que el esquema sea http/https antes de renderizar el enlace.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura."
+    },
+    {
+      "id": "P2-04",
+      "severity": "P2",
+      "area": "apps/api",
+      "title": "UUID malformado devuelve 500 en vez de 422; no se valida el consentimiento de voz",
+      "file": "apps/api/main.py",
+      "lines": "create_job / upload_asset",
+      "problem": "UUID(voice_asset_id) sin try/except convierte un id invalido en 500. create_job descarta voice_clone_authorized del request persistido y no exige consentimiento explicito antes de aceptar una referencia de voz.",
+      "evidence": "UUID(...) called sin validacion previa.",
+      "fix": "Validar con el modelo de pydantic y exigir voice_clone_authorized.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura."
+    },
+    {
+      "id": "P2-05",
+      "severity": "P2",
+      "area": "infra",
+      "title": "Gateway nginx sin limites de body ni timeouts, y resolucion de IP al arrancar",
+      "file": "infra/worker-gateway.conf",
+      "lines": "todo",
+      "problem": "Sin client_max_body_size (1 MB por defecto), sin proxy_read_timeout/proxy_send_timeout y sin auth_request (la validacion del Bearer vive solo en la API). proxy_pass http://api:8000 resuelve la IP al arrancar -> 502 si el contenedor api se recrea. El route matching si es correcto (= /v1/jobs/next exacto, regex de UUID, location / -> 404).",
+      "evidence": "Inspeccion del fichero de configuracion.",
+      "fix": "Anadir limit_req/limit_conn, timeouts, resolver y auth_request, o usar un upstream con nombre.",
+      "status": "pendiente",
+      "verification": "tests/test_worker_gateway.py sigue pasando."
+    },
+    {
+      "id": "P2-06",
+      "severity": "P2",
+      "area": "infra",
+      "title": "Compose de infra sin redes segmentadas y con DATABASE_URL sin escape",
+      "file": "infra/docker-compose.yml",
+      "lines": "36, global",
+      "problem": "Todos los servicios (incluido publisher) comparten la red por defecto: conviene segmentar edge/db. DATABASE_URL se interpola sin escape: una contrasena con @, / o : rompe la URL.",
+      "evidence": "Ausencia de bloques networks:; interpolacion directa de la variable.",
+      "fix": "Definir networks edge/db y construir DATABASE_URL con codificacion o con URL-encode.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura."
+    },
+    {
+      "id": "P2-07",
+      "severity": "P2",
+      "area": "scripts",
+      "title": "generate_api_types.sh: resultado no usado y npx no declarado",
+      "file": "scripts/generate_api_types.sh",
+      "lines": "completo",
+      "problem": "El JSON de tipos generado no se consume: app/page.tsx declara Job, Asset y WorkerSession a mano, de modo que los tipos van a derivar con seguridad. Ademas npx openapi-typescript no esta en package.json (se descarga en runtime) y curl -s sin --fail guarda el cuerpo de error.",
+      "evidence": "grep de 'types' en apps/dashboard/app/page.tsx: los tipos son locales.",
+      "fix": "Importar los tipos generados y declararlos como dependencia de dev.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura cruzada."
+    },
+    {
+      "id": "P2-08",
+      "severity": "P2",
+      "area": "scripts",
+      "title": "Flags de la CLI hf a confirmar en deploy_hf_spaces.sh",
+      "file": "scripts/deploy_hf_spaces.sh",
+      "lines": "34-46",
+      "problem": "El script usa --type space y --sdk gradio; la documentacion actual de la CLI hf usa --repo-type space y --space-sdk. Ademas MIXPOST_URL/HF_SPACE_ID pueden apuntar a una cuenta distinta de la de los Space URLs del .env (javiertarazon-*).",
+      "evidence": "Contraste entre el script y la ayuda publicada de la CLI hf.",
+      "fix": "Verificar con 'hf --help' de la version instalada y unificar el origen del id de cuenta.",
+      "status": "pendiente",
+      "verification": "Analizado; requiere la CLI instalada para confirmar."
+    },
+    {
+      "id": "P3-01",
+      "severity": "P3",
+      "area": "repo",
+      "title": "Makefile con mojibake y carrera en el target dev",
+      "file": "Makefile",
+      "lines": "completo",
+      "problem": "El archivo esta codificado con bytes UTF-8 leidos como latin-1 (mojibake). El target dev encadena 'up -d' (asincrono) antes de 'generate-types', que necesita la API viva: carrera en el primer make dev.",
+      "evidence": "Caracteres rotos en el archivo.",
+      "fix": "Reescribir en UTF-8 y esperar al healthcheck antes de generar tipos.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura."
+    },
+    {
+      "id": "P3-02",
+      "severity": "P3",
+      "area": "apps/api",
+      "title": "Codigo muerto: imports y constantes sin uso",
+      "file": "apps/api/settings.py, apps/api/main.py, apps/publisher-service/main.py",
+      "lines": "varias",
+      "problem": "Imports os/Literal/BaseModel en settings.py, datetime.timezone en publisher main.py y las constantes HF_TOKEN, SCRIPT_SPACE_URL, VOICE_STUDIO_URL, YOUTUBE_API_KEY en main.py no se usaban. Tambien settings_obj.",
+      "evidence": "pyflakes los reportaba como 'imported but unused'.",
+      "fix": "Eliminados.",
+      "status": "aplicado",
+      "verification": "pyflakes sin avisos en apps/, packages/, scripts/ y tests/."
+    },
+    {
+      "id": "P3-03",
+      "severity": "P3",
+      "area": "infra/docker",
+      "title": "Imagen del dashboard sin output standalone (~1 GB)",
+      "file": "apps/dashboard/Dockerfile",
+      "lines": "13",
+      "problem": "Sin 'output: standalone' la imagen arrastra node_modules y .next completos. Funciona, pero la imagen es mucho mayor de lo necesario.",
+      "evidence": "Dockerfile sin next.config y CMD npm run start.",
+      "fix": "Anadir next.config.mjs con output: 'standalone' y copiar solo .next/standalone.",
+      "status": "pendiente",
+      "verification": "Analizado por lectura."
+    },
+    {
+      "id": "OD-01",
+      "severity": "P0",
+      "area": "apps/publisher-service",
+      "title": "Mixpost Lite no tiene API REST: el publisher no podia automatizar",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py",
+      "lines": "nuevo",
+      "problem": "La API REST de Mixpost solo existe en Mixpost Pro (299 USD unico) o Cloud. La edicion Lite, que es la gratuita, no expone /workspaces, /accounts ni /posts, y ademas no publica en TikTok, Instagram ni YouTube.",
+      "evidence": "Precios de Mixpost (mixpost.app/pricing): API, MCP y webhooks solo en Pro. OpenAPI oficial: las rutas de publicacion cuelgan de /{workspace}/posts.",
+      "fix": "Reescritura completa del publisher contra Open-Dispatch (MIT), que expone POST /dispatch y cubre TikTok, Instagram y YouTube sin coste.",
+      "status": "aplicado",
+      "verification": "16 tests + smoke end-to-end; ver OD-08."
+    },
+    {
+      "id": "OD-02",
+      "severity": "P0",
+      "area": "apps/publisher-service",
+      "title": "YouTube exige una ruta local RELATIVA: la URL publica no sirve",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py",
+      "lines": "_stage_video",
+      "problem": "El adaptador de YouTube de Open-Dispatch sube el archivo desde disco y valida video_path con resolve_media_path(strict_root=True): rutas absolutas y rutas con '..' se rechazan. Con la URL publica de R2 el Short nunca se publicaria.",
+      "evidence": "open-dispatch/media/paths.py: 'absolute media paths are not allowed' y 'media path escapes the configured media root'. open-dispatch/adapters/youtube.py: 'youtube_short.video_path is required'.",
+      "fix": "El publisher descarga el MP4 al volumen compartido (OPEN_DISPATCH_MEDIA_DIR) y envia la ruta relativa 'renders/<nombre>.mp4'. El compose monta el mismo volumen en el publisher y en open-dispatch con la MISMA ruta (/media).",
+      "status": "aplicado",
+      "verification": "test_dispatch_stages_the_video_in_the_shared_media_volume"
+    },
+    {
+      "id": "OD-03",
+      "severity": "P1",
+      "area": "apps/publisher-service",
+      "title": "TikTok e Instagram necesitan URL publica: se valida el origen",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py",
+      "lines": "_validate_public_video_url",
+      "problem": "Ambas redes descargan el video ellas mismas desde una URL publica. Aceptar cualquier URL convertiria el publisher en un proxy para destinos internos.",
+      "evidence": "adapters/tiktok.py: source PULL_FROM_URL con video_url. adapters/instagram.py: 'Instagram Graph requires media to be at a public URL'.",
+      "fix": "El video_url debe ser HTTPS y del host de STORAGE_PUBLIC_BASE_URL, con la misma comprobacion de esquema, puerto y credenciales embebidas que ya usaba el adaptador de Mixpost. Se valida ANTES de cualquier peticion saliente.",
+      "status": "aplicado",
+      "verification": "test_dispatch_rejects_video_outside_configured_storage_host y comprobacion equivalente en el smoke end-to-end (no se genera trafico hacia el scheduler)."
+    },
+    {
+      "id": "OD-04",
+      "severity": "P2",
+      "area": "apps/publisher-service",
+      "title": "Open-Dispatch no expone un endpoint JSON de canales configurados",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py",
+      "lines": "list_accounts",
+      "problem": "El dashboard de Open-Dispatch muestra las plataformas configuradas por variable de entorno, pero solo en HTML; el unico endpoint JSON es /api/profiles, que solo lista perfiles. GET /v1/integrations se quedaria sin datos.",
+      "evidence": "open-dispatch/api/app.py: _platforms_configured() se usa en las plantillas HTML; la unica ruta JSON es GET /api/profiles.",
+      "fix": "list_accounts() combina las variables de entorno (mismo criterio y mismos nombres que usa Open-Dispatch) con los perfiles de GET /api/profiles. La segunda fuente es best-effort: si falla, no rompe el endpoint.",
+      "status": "aplicado",
+      "verification": "test_list_accounts_returns_only_configured_platforms y test_list_accounts_includes_platforms_configured_in_profiles"
+    },
+    {
+      "id": "OD-05",
+      "severity": "P1",
+      "area": "apps/publisher-service",
+      "title": "Cambio de contrato en POST /v1/publish",
+      "file": "apps/publisher-service/main.py",
+      "lines": "PublishRequest",
+      "problem": "El contrato de Mixpost exigia 'integration_id' (id numerico de cuenta) y un unico 'platform'. Open-Dispatch enruta por lista de destinos: 'platforms' admite tiktok, instagram y youtube, opcionalmente 'plataforma:cuenta'.",
+      "evidence": "open-dispatch/api/app.py::dispatch: un ContentUnit con targets[], uno por destino, y una fila de cola por target.",
+      "fix": "PublishRequest acepta 'platforms' (lista) y conserva 'platform' como alias de compatibilidad y 'integration_id' para el backend de Mixpost, que sigue disponible con PUBLISHER_BACKEND=mixpost.",
+      "status": "aplicado",
+      "verification": "test_publisher_publishes_to_open_dispatch_by_default y test_publisher_returns_422_for_unsupported_platform"
+    },
+    {
+      "id": "OD-06",
+      "severity": "P2",
+      "area": "infra/docker",
+      "title": "Perfiles de compose separados: 'dispatch' (Open-Dispatch) y 'scheduler' (Mixpost)",
+      "file": "infra/docker-compose.yml",
+      "lines": "profiles",
+      "problem": "Con el perfil 'publisher' se levantaba tambien el stack de Mixpost, que exige APP_KEY y contrasenas de MySQL. Con Open-Dispatch como scheduler elected, eso es arrastrar un servicio que no se usa.",
+      "evidence": "docker compose config: mixpost exige MIXPOST_APP_KEY y MIXPOST_DB_PASSWORD.",
+      "fix": "mixpost pasa al perfil 'scheduler' y Open-Dispatch usa el perfil 'dispatch'. El publisher se arranca con --profile publisher --profile dispatch.",
+      "status": "aplicado",
+      "verification": "docker compose config OK con publisher+dispatch y con publisher+scheduler"
+    },
+    {
+      "id": "OD-07",
+      "severity": "P2",
+      "area": "infra/docker",
+      "title": "Open-Dispatch no publica imagen Docker: se construye desde el repositorio",
+      "file": "infra/docker-compose.yml",
+      "lines": "open-dispatch",
+      "problem": "El proyecto upstream no publica imagen en Docker Hub ni en GHCR (su CI solo prueba y construye el wheel), asi que no hay una imagen oficial que usar.",
+      "evidence": "open-dispatch/.github/workflows/ci.yml: jobs de test y wheel, sin push de imagen.",
+      "fix": "Se construye desde el repositorio oficial fijado a un commit concreto (773dd54d4cec24a5995d8c722e9f02545cfba013) para que el despliegue sea reproducible: build.context acepta una URL de git en Compose.",
+      "status": "aplicado",
+      "verification": "docker compose config OK; el build requiere salida a internet la primera vez"
+    },
+    {
+      "id": "OD-08",
+      "severity": "P1",
+      "area": "tests",
+      "title": "Smoke test end-to-end del publisher contra un Open-Dispatch simulado",
+      "file": "scripts/smoke_publisher.py",
+      "lines": "nuevo",
+      "problem": "Los tests unitarios con MockTransport no comprueban el camino HTTP real: cabeceras, codigos de estado, cuerpo JSON y el efecto de las guardas.",
+      "evidence": "El script levanta un scheduler falso y el publisher con uvicorn reales.",
+      "fix": "scripts/smoke_publisher.py comprueba la autenticacion Bearer, la forma de la ContentUnit, el rechazo 422 de una URL ajena al almacenamiento SIN generar trafico, el rechazo de plataforma no soportada y GET /v1/integrations.",
+      "status": "aplicado",
+      "verification": "SMOKE OK: publisher <-> Open-Dispatch. La suite completa queda en 48 tests (17 propios del adaptador y del publisher)."
+    },
+    {
+      "id": "AU-01",
+      "severidad": "P0",
+      "area": "seguridad",
+      "titulo": "La puerta de aprobacion humana no exige autenticacion",
+      "file": "apps/api/main.py",
+      "lines": "872 (approve_job), 949 (reject_job)",
+      "problema": "Las dos rutas que disparan la publicacion no tienen Depends(require_worker_token). Medido con TestClient: POST /v1/jobs/{id}/approve sin cabecera Authorization NO devuelve 401, sino que ejecuta la aprobacion y llama al publisher. El manifiesto declaraba '8 de 14 rutas publicas'; la medicion real da 10 de 16.",
+      "fix": "NO CORREGIDO: el usuario decidio el 9-nov-2026 aplazar la autenticacion de la publicacion hasta que todo lo demas este resuelto. Queda como la decision D1.",
+      "status": "pendiente_decision",
+      "verificacion": "Medido por ejecucion: TestClient sin Authorization -> 10 de 16 rutas abiertas (la API expone 16 rutas, 6 con token)."
+    },
+    {
+      "id": "AU-02",
+      "severidad": "P0",
+      "area": "seguridad",
+      "titulo": "El publisher publica sin autenticacion y permite saltarse la puerta de aprobacion",
+      "file": "apps/publisher-service/main.py",
+      "lines": "169 (publish)",
+      "problema": "POST /v1/publish no tiene dependencias de seguridad y la API lo llama sin cabecera Authorization (apps/api/main.py:850). Probado end-to-end con un scheduler Open-Dispatch simulado: un POST sin ninguna credencial encolo la publicacion para tiktok e instagram (HTTP 200) con la ContentUnit completa. La puerta de aprobacion es un formality check: se puede saltar golpeando el publisher.",
+      "fix": "NO CORREGIDO por decision del usuario (ver AU-01). El resto del hardening del publisher si se aplico: configuracion validada (AU-12) y diagnostico real del fallo de descarga (AU-15).",
+      "status": "pendiente_decision",
+      "verificacion": "Probado por ejecucion: dispatch encolado en el scheduler simulado sin credencial."
+    },
+    {
+      "id": "AU-03",
+      "severidad": "P0",
+      "area": "apps/workers",
+      "titulo": "timedelta(months=) no existe: la etapa de investigacion reventaba con cualquier video de hace mas de un mes",
+      "file": "apps/workers/viral_research.py",
+      "lines": "142, 156",
+      "problema": "El mapa de unidades traducía 'mes' a 'months' y la linea 156 hacia timedelta(months=...): TypeError 'months' is an invalid keyword argument. El error escapaba fuera del try que solo cubria la red, asi que el job de investigacion se marcaba fallido. Con Accept-Language es-ES (el camino por defecto) cualquier resultado 'hace N meses' tumba la etapa.",
+      "fix": "Se reescribio _parse_relative_time con una tabla de patrones explicitos (espanol e ingles) y los meses se aproximan con timedelta(days=30*amount), igual que los anos con 365.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: 8 parametrizaciones de fechas relativas. Reproduccion previa del TypeError confirmada."
+    },
+    {
+      "id": "AU-04",
+      "severidad": "P0",
+      "area": "apps/workers",
+      "titulo": "Un solo fallo transitorio de heartbeat declaraba el lease perdido y tiraba hasta 30 minutos de trabajo",
+      "file": "apps/workers/worker_common.py",
+      "lines": "LeaseRenewer (antes 302-307)",
+      "problema": "El hilo de renovacion hacia 'except requests.RequestException: self._lost.set(); return' sin reintento. Con JOB_LEASE_SECONDS=300 y renovacion cada 60 s, la API habria aceptado varias renovaciones mas, pero el worker se rendia: ensure_active() lanzaba, el job se marcaba fallido y se perdian la investigacion, el guion y la voz ya sintetizados, dejando el WAV huerfano en R2.",
+      "fix": "LeaseRenewer.renew_once() distingue el 409 (la API ya no reconoce la reserva: lease perdido de inmediato) del fallo transitorio, que se tolera hasta LEASE_MAX_CONSECUTIVE_FAILURES (3) intentos seguidos con espera creciente. Ellease solo se pierde al agotarlos.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_lease.py: un fallo transitorio NO pierde el lease; tres seguidos SI; un 409 lo pierde de inmediato."
+    },
+    {
+      "id": "AU-05",
+      "severidad": "P0",
+      "area": "ci",
+      "titulo": "El paso de actionlint se ejecutaba antes del checkout: el job moria en el primer paso",
+      "file": ".github/workflows/notebook-ci.yml",
+      "lines": "28-36 (se movieron despues de la linea 38)",
+      "problema": "El paso 'Validate workflow files with actionlint' estaba antes de 'actions/checkout@v4'. Sin el repositorio en disco el glob no expande y actionlint recibe la ruta literal: 'could not read \".github/workflows/*.yml\"', exit 3. El job moria en el paso 1 y ningun check posterior llegaba a ejecutarse. El README afirmaba que la CI ejecutaba actionlint, cosa imposible.",
+      "fix": "El checkout se movio al principio y el paso de actionlint quedo despues. Ademas se elimino el servicio dind (ver AU-07).",
+      "status": "aplicado y verificado",
+      "verificacion": "actionlint v1.7.12 sobre el workflow real -> exit 0. Reproduccion previa del exit 3 sobre la ruta inexistente."
+    },
+    {
+      "id": "AU-06",
+      "severidad": "P0",
+      "area": "ci",
+      "titulo": "Conflictos de dependencias: el paso 'Install dependencies' no podia resolverse",
+      "file": "apps/api/requirements-dev.txt, packages/python/adapters/requirements.txt, apps/workers/requirements-workers.txt",
+      "lines": "todo el fichero",
+      "problema": "requirements-dev.txt fijaba gradio_client>=1.4,<2 y packages/python/adapters/requirements.txt fijaba gradio_client>=2,<3: la instalacion conjunta era irresoluble. uv: 'Because you require gradio-client>=1.4,<2 and gradio-client>=2,<3, we can conclude that your requirements are unsatisfiable' (exit 1). Ademas workers/requirements-workers.txt pedia gradio_client>=1.0 sin techo.",
+      "fix": "Se elimina el pin de gradio_client de requirements-dev.txt (nada en apps/api lo importa: solo lo usan packages/python/adapters y scripts/smoke_hf_spaces_cpu.py) y se alinea workers/requirements-workers.txt a >=2,<3. La CI instala ademas los requisitos de los workers.",
+      "status": "aplicado y verificado",
+      "verificacion": "uv pip install --dry-run con los dos ficheros -> exit 0. Con la secuencia completa de la CI -> exit 0 en los dos pasos."
+    },
+    {
+      "id": "AU-07",
+      "severidad": "P1",
+      "area": "ci",
+      "titulo": "El stack de compose no era alcanzable desde el runner: el servicio dind publicaba los puertos en su propio namespace",
+      "file": ".github/workflows/notebook-ci.yml",
+      "lines": "16-24 (servicio docker eliminado)",
+      "problema": "El servicio docker:24.0-dind se declaraba con 'ports: - 2375:2375' pero sin --network host: los puertos que publica 'docker compose up' quedan en el netns del contenedor dind, no en el 127.0.0.1 del runner. Afectaba al healthcheck, a API_BASE_URL, a S3_ENDPOINT_URL y al Postgres. Ademas 2375:2375 publicaba la API de Docker sin TLS.",
+      "fix": "Se elimina el servicio dind: el runner hospedado de GitHub ya trae el daemon de Docker instalado, y es ese daemon nativo el que publica los puertos en el localhost del runner. Se deja un comentario con la alternativa si algun dia hace falta dind.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y unico servicio docker消失了 del workflow. El alcance real (que los puertos se publiquen en el runner) se confirmara en el primer run con la facturacion resuelta."
+    },
+    {
+      "id": "AU-08",
+      "severidad": "P1",
+      "area": "infra/docker",
+      "titulo": "MinIO borro sus repositorios de Docker Hub: el stack de desarrollo no levantaba en una maquina limpia",
+      "file": "docker-compose.dev.yml",
+      "lines": "minio, minio-init",
+      "problema": "MinIO elimino 'minio/minio' y 'minio/mc' de Docker Hub el 11-sep-2026. Ambas referencias devolvian 401 (pull denied) en el registry: 'docker compose -f docker-compose.dev.yml up -d' moria en la primera descarga, y el paso de la CI que levanta el compose tambien.",
+      "fix": "Se usan las imagenes de la comunidad 'pgsty' (mismo servidor, mismo cliente mc), fijadas a version: pgsty/minio:RELEASE.2026-08-04T00-00-00Z y pgsty/mc:RELEASE.2026-11-09T00-00-00Z.",
+      "status": "aplicado y verificado",
+      "verificacion": "Registry de Docker Hub: HTTP 200 con manifiesto multi-arch (amd64, arm64) para ambas; control negativo: minio/minio devuelve 401."
+    },
+    {
+      "id": "AU-09",
+      "severidad": "P1",
+      "area": "infra",
+      "titulo": "El gateway de workers era publico sin limite de ritmo ni timeouts",
+      "file": "infra/worker-gateway.conf",
+      "lines": "todo el fichero",
+      "problema": "El gateway se publica a Internet por Quick Tunnel de Cloudflare, sin Cloudflare Access delante, y no tenia ninguna de estas directivas: limit_req, limit_conn, proxy_read_timeout, proxy_send_timeout, proxy_connect_timeout, client_max_body_size, auth_request. La unica defensa era el Bearer estatico, que se puede forzar sin limite.",
+      "fix": "Zonas de limitacion (120 peticiones/minuto y 8 conexiones por IP real, con real_ip desde CF-Connecting-IP), timeouts de proxy y de cliente, client_max_body_size acorde al limite de la API y sonda /healthz para el healthcheck del compose.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero generado. La sintaxis de nginx no se pudo validar: no hay nginx en el entorno de auditoria."
+    },
+    {
+      "id": "AU-10",
+      "severidad": "P1",
+      "area": "infra",
+      "titulo": "nginx fijaba la IP del upstream: 502 en las tres rutas de worker tras recrear la API",
+      "file": "infra/worker-gateway.conf",
+      "lines": "9, 19, 29 (proxy_pass) y el bloque resolver",
+      "problema": "'proxy_pass http://api:8000' sin resolver ni variables resuelve el host una sola vez al cargar la configuracion. Tras 'docker compose up -d --force-recreate api' el contenedor cambia de IP y nginx sigue apuntando a la anterior.",
+      "fix": "Se usa 'resolver 127.0.0.11 valid=10s' (el resolutor de Docker) y una variable con el nombre del upstream, de modo que se vuelve a resolver en cada peticion.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero generado. Sin Docker no se pudo observar el ciclo recrear -> 200."
+    },
+    {
+      "id": "AU-11",
+      "severidad": "P1",
+      "area": "infra/docker",
+      "titulo": "Los contenedores de la API y del dashboard corrian como root",
+      "file": "apps/api/Dockerfile, apps/dashboard/Dockerfile",
+      "lines": "completo",
+      "problema": "Ninguno de los dos declaraba USER: uvicorn y 'npm run start' se ejecutaban como root, en contra del AGENTS.md ('nadie debe correr como root'). El publisher ya lo hacia bien con USER 999:999.",
+      "fix": "La API crea el usuario de sistema 'api' (uid 1001) y arranca con USER 1001:1001; el dashboard usa el usuario 'node' que ya trae la imagen node:20-alpine, con chown de /app y HOME=/home/node.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion de los Dockerfiles. El arranque real no se pudo verificar: no hay Docker en el entorno de auditoria."
+    },
+    {
+      "id": "AU-12",
+      "severidad": "P1",
+      "area": "apps/publisher-service",
+      "titulo": "La configuracion del publisher se leia con os.environ sueltos, sin validacion",
+      "file": "apps/publisher-service/publisher_settings.py (nuevo), apps/publisher-service/main.py",
+      "lines": "nuevo",
+      "problema": "El publisher leia PUBLISHER_BACKEND y CORS_ORIGINS con os.environ.get sueltos mientras la API usa pydantic-settings: dos paradigmas distintos, sin validacion ni defaults en un unico sitio.",
+      "fix": "Se creo publisher_settings.py con un BaseSettings: mismos nombres de variable, mismos valores por defecto, validacion explicita del backend y extra='ignore' para el .env compartido. El modulo NO se llama 'settings' a proposito: apps/api/settings.py convive en la misma sesion de pytest y el nombre del modulo en sys.modules es global.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_publisher_settings.py: default, backend invalido, normalizacion, CORS con el puerto 3000 del dashboard y claves desconocidas."
+    },
+    {
+      "id": "AU-13",
+      "severidad": "P1",
+      "area": "repo",
+      "titulo": "El manifiesto y el README contradecian el estado real del repositorio",
+      "file": "docs/estado-y-trazabilidad-marketing-content-os.json, docs/estado-sesion-actual.json, README.md",
+      "lines": "todo el fichero",
+      "problema": "El manifesto estaba fechado el 5-nov-2026 con 12 commits de desfase: declaraba '8 de 14 rutas publicas' (hoy 10 de 16), no registraba los 7 runs de CI del 8-nov y afirmaba que la CI ejecutaba actionlint, cosa imposible por el orden de los pasos (AU-05). El README tambien afirmaba que la CI estaba bloqueada solo por la facturacion.",
+      "fix": "Manifiesto y README regenerados con el estado medido: rutas reales, los 14 runs, los tres bloqueadores de la CI y la decision del usuario sobre la autenticacion de la publicacion.",
+      "status": "aplicado y verificado",
+      "verificacion": "Auditoria del 9-nov-2026 con medicion ejecutada de las 16 rutas y lectura de los 14 runs por la API de Actions."
+    },
+    {
+      "id": "AU-14",
+      "severidad": "P1",
+      "area": "tests",
+      "titulo": "Unos 2.000 lineas de workers sin un solo test",
+      "file": "tests/test_workers_research.py, tests/test_workers_lease.py, tests/test_workers_render.py (nuevos)",
+      "lines": "nuevo",
+      "problema": "apps/workers/ (1.992 lineas) no tenia ninguna cobertura: los dos P0 de esta auditoria (AU-03 y AU-04) habrian salido con un test de una linea.",
+      "fix": "Se anaden 68 tests: fechas relativas y numero de vistas, saneado del prompt, lease y reintentos del bucle del worker, validacion anti-SSRF de la URL de audio y ejecucion de comandos externos.",
+      "status": "aplicado y verificado",
+      "verificacion": "La suite pasa de 63 a 131 tests. Tambien se detecto y corrigio una fragilidad previa: el token del worker lo fijaba cada modulo de test al importarse, asi que el resultado dependia del orden de recoleccion. Ahora lo define tests/conftest.py."
+    },
+    {
+      "id": "AU-15",
+      "severidad": "P1",
+      "area": "apps/publisher-service",
+      "titulo": "El fallo al descargar el MP4 se reportaba como problema de conexion con el scheduler",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py, apps/publisher-service/main.py",
+      "lines": "215 (VideoStageError), 410 (dispatch_content)",
+      "problema": "Con 'youtube' en la lista de plataformas, _stage_video descarga el MP4 al volumen compartido. Si esa descarga fallaba, el error se propagaba como httpx.RequestError y el publisher lo reportaba como 'No se pudo conectar con el scheduler de publicacion': senalaba al servicio equivocado y escondia la causa real.",
+      "fix": "Se creo VideoStageError, que envuelve el fallo de descarga con la URL y la causa, y el publisher lo responde con un detalle propio.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_publisher_settings.py: un fallo de descarga devuelve 502 con un mensaje que menciona la descarga del video y NO 'no se pudo conectar con el scheduler'."
+    },
+    {
+      "id": "AU-16",
+      "severidad": "P1",
+      "area": "apps/workers",
+      "titulo": "SSRF latente: el worker de render descargaba de una URL sin validar",
+      "file": "apps/workers/local_render_worker.py",
+      "lines": "255 (validate_audio_url), 319 (download_audio)",
+      "problema": "download_audio hacia un GET a la URL tomada del request sin comprobar esquema ni host, y escribia la respuesta en public/voice.wav, que acaba dentro del MP4 publicado. Hoy era inalcanzable (ContentRequest descarta campos extra), pero quedaba como puerta dormida.",
+      "fix": "validate_audio_url exige http/https, exige https fuera de los hosts locales y comprueba el host contra una allowlist (STORAGE_PUBLIC_BASE_URL y R2_PUBLIC_HOSTS). La validacion ocurre ANTES de cualquier peticion saliente.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_render.py: esquema no permitido, host fuera de la allowlist, http plano fuera de localhost, host sufixado del permitido y host local."
+    },
+    {
+      "id": "AU-17",
+      "severidad": "P2",
+      "area": "apps/api",
+      "titulo": "init_database() recreaba la CHECK de estado en cada arranque y reescribia la tabla",
+      "file": "apps/api/main.py",
+      "lines": "ensure_job_status_constraint, _column_exists",
+      "problema": "Cada arranque ejecutaba 'ALTER TABLE jobs DROP CONSTRAINT' y despues 'ADD CONSTRAINT ... CHECK': anadir un CHECK obliga a Postgres a validar la tabla completa y toma un lock ACCESS EXCLUSIVE, asi que cada reinicio de la API reescribia la tabla jobs y bloqueaba las escrituras. Ademas el UPDATE de migracion de 'progress' recorria la tabla en cada arranque.",
+      "fix": "ensure_job_status_constraint consulta pg_constraint y solo hace DROP+ADD si la definicion no es la esperada. La migracion de datos de 'progress' solo corre cuando la columna se acaba de anadir.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_api_migrations.py: constraint correcta -> no se toca; migracion idempotente; constraint antigua -> se recrea; ausencia -> se crea."
+    },
+    {
+      "id": "AU-18",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "El .dockerignore del dashboard no excluia .env*: los secretos podian hornearse en la imagen",
+      "file": "apps/dashboard/.dockerignore",
+      "lines": "completo",
+      "problema": "Solo excluia node_modules, .next y npm-debug.log*. El contexto de build es apps/dashboard, asi que el .dockerignore de la raiz no aplica: un .env.local con un token se habria horneado en una capa de la imagen.",
+      "fix": "Se excluyen todas las variantes .env* (con excepcion de .env.example), mas .git, *.pem, *.key y *.p12.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero. Sin Docker no se pudo construir la imagen para comprobarlo de forma real."
+    },
+    {
+      "id": "AU-19",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "El compose de produccion no tenia healthchecks ni politicas de reinicio",
+      "file": "infra/docker-compose.yml",
+      "lines": "todos los servicios",
+      "problema": "Ninguno de los 12 servicios declaraba 'restart:' y faltaban healthchecks en la API, el publisher, el dashboard y el gateway. publisher y worker-gateway dependian de api sin 'condition: service_healthy', y cloudflared arrancaba contra un gateway que aun puede no escuchar. Tras reiniciar el host, los servicios no volvian solos.",
+      "fix": "Se anade 'restart: unless-stopped' a todos los servicios, healthchecks a los que sirven HTTP y dependencias condicionadas a service_healthy donde corresponde.",
+      "status": "aplicado y verificado",
+      "verificacion": "El YAML parsea y la topologia se comprobo con un lector propio. Sin Docker no se pudo validar con 'docker compose config'."
+    },
+    {
+      "id": "AU-20",
+      "severidad": "P2",
+      "area": "infra",
+      "titulo": "Todos los servicios compartian la red por defecto",
+      "file": "infra/docker-compose.yml, docker-compose.dev.yml",
+      "lines": "bloque networks",
+      "problema": "Postgres, el publisher y los schedulers vivian en la misma red que el gateway publico.",
+      "fix": "Se segmentan en 'edge' (servicios que se hablan o que se publican) y 'db' (los que guardan estado). El publisher no esta en 'db' porque no habla con ninguna base de datos.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y mapa de redes comprobado servicio por servicio. Sin Docker no se pudo comprobar la resolucion de nombres entre redes."
+    },
+    {
+      "id": "AU-21",
+      "severidad": "P2",
+      "area": "infra",
+      "titulo": "La DATABASE_URL se interpolaba sin escapar: una contrasena con @, / o : rompia la URL",
+      "file": "infra/docker-compose.yml, docker-compose.dev.yml",
+      "lines": "servicio api",
+      "problema": "La URL se construia concatenando la contrasena dentro de la URL de Postgres.",
+      "fix": "Se respeta la DATABASE_URL del .env cuando esta definida (que es el caso normal) y el valor compuesto queda como respaldo.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido. El comportamiento real depende de la contrasena que use cada despliegue."
+    },
+    {
+      "id": "AU-22",
+      "severidad": "P2",
+      "area": "seguridad",
+      "titulo": "python-multipart con cuatro vulnerabilidades high en el suelo del rango",
+      "file": "apps/api/requirements.txt",
+      "lines": "ultima linea",
+      "problema": "El rango >=0.0.12 permitia cuatro vulnerabilidades: GHSA-5rvq-cxj2-64vf, GHSA-pp6c-gr5w-3c5g, GHSA-wp53-j4wj-2cfg y GHSA-59g5-xgcq-4qw3 (arregladas en 0.0.18, 0.0.22, 0.0.27 y 0.0.30).",
+      "fix": "El suelo sube a >=0.0.30.",
+      "status": "aplicado y verificado",
+      "verificacion": "Comprobado contra la base de avisos de GitHub: la version instalada (0.0.33) no aparece en ninguna de las cuatro."
+    },
+    {
+      "id": "AU-23",
+      "severidad": "P2",
+      "area": "repo",
+      "titulo": "Sin lockfile de Python: las instalaciones no eran reproducibles",
+      "file": "apps/api/requirements.lock.txt (nuevo)",
+      "lines": "nuevo",
+      "problema": "npm tenia package-lock.json; Python no. La instalacion resolvia versions distintas en cada ejecucion.",
+      "fix": "Se genero un lockfile con 'uv pip compile --universal --generate-hashes': versiones exactas y hash de cada artefacto, solo con las dependencias de runtime de la API. La imagen de la API lo instala con '--require-hashes'.",
+      "status": "aplicado y verificado",
+      "verificacion": "pip install --no-cache-dir --require-hashes -r requirements.lock.txt -> 36 paquetes, exit 0. uv con los mismos ficheros -> exit 0."
+    },
+    {
+      "id": "AU-24",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "parse_view_count multiplicaba por diez las cifras en formato espanol",
+      "file": "apps/workers/viral_research.py",
+      "lines": "parse_view_count, _parse_number",
+      "problema": "re.sub(r'[^\\d]', '', digits) borraba la coma decimal: '1,2 M de vistas' daba 12.000.000 en lugar de 1.200.000, y '1.234,5' daba 12345. Como la seleccion de virales se ordena por view_count, el criterio y los datos que llegaban al LLM eran incorrectos.",
+      "fix": "Se anade _parse_number, que distingue el formato espanol (punto de miles, coma decimal) del ingles (coma de miles, punto decimal) y aplica el sufijo K/M/B.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: 8 formatos, incluidos '1,2 M de vistas' -> 1.200.000 y '1.234,5' -> 1234."
+    },
+    {
+      "id": "AU-25",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Prompt injection: el contenido de terceros se interpolaba sin sanear en el prompt del LLM",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "sanitize_untrusted, build_prompt",
+      "problema": "Titulos, URLs y fragmentos de paginas publicas los controla un tercero y se interpolaban tal cual en el prompt; la salida del LLM se usa literalmente como guion y se publica.",
+      "fix": "Se anade sanitize_untrusted (quita caracteres de control, colapsa espacios, elimina los corchetes angulares y recorta la longitud) y el prompt marca el bloque como contenido NO CONFIABLE con delimitadores.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: caracteres de control, intento de romper los delimitadores, recorte y contenido del prompt."
+    },
+    {
+      "id": "AU-26",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Un report_progress fallido abortaba la sintesis de voz y destruia el trabajo",
+      "file": "apps/workers/local_research_worker.py, apps/workers/worker_common.py",
+      "lines": "report_progress_safe",
+      "problema": "La llamada report_progress estaba dentro del try cuyo handler marcaba 'la sintesis de voz fallo'. Un error de red transitorio al informar del progreso abortaba la voz, el worker completaba sin audio_object_key y la API respondia 422: se perdian la investigacion y el guion.",
+      "fix": "Se anade report_progress_safe, que registra el fallo y no propaga, y el reporte de la etapa de voz se mueve fuera del bloque de la voz.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de control y de los dos bloques try."
+    },
+    {
+      "id": "AU-27",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "El bucle de reserva reintentaba para siempre y salia con codigo 0",
+      "file": "apps/workers/worker_common.py, apps/workers/local_research_worker.py, apps/workers/local_render_worker.py",
+      "lines": "run_worker_loop, main",
+      "problema": "No distinguia un 401 (configuracion) de un 5xx (transitorio), no aplicaba backoff ni contaba fallos y el proceso nunca salia; ademas main() devolvia 0, de modo que un wrapper o la CI veian 'exito'.",
+      "fix": "Se anaden WorkerAuthError y WorkerUnavailableError, con tope de reintentos y espera exponencial; main() devuelve EXIT_CONFIG_ERROR (2) ante un 401/403 y EXIT_API_ERROR (3) si la API no responde.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_lease.py: un 401 detiene el bucle con WorkerAuthError; la API caida agota los reintentos y lanza WorkerUnavailableError."
+    },
+    {
+      "id": "AU-28",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Fuga del WAV de voz de referencia en el temporal del sistema",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "synthesize_voice",
+      "problema": "La descarga del WAV de referencia ocurria antes del try cuyo finally hacia el unlink: si storage.download_file fallaba tras escribir parte del fichero, el audio de voz quedaba en %TEMP% para siempre.",
+      "fix": "La descarga se mete dentro del bloque protegido y el finally borra el fichero en cualquier camino de salida.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de control de synthesize_voice."
+    },
+    {
+      "id": "AU-29",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "El timeout de subprocess mataba solo al proceso directo y perdiase el MP4 ya renderizado",
+      "file": "apps/workers/local_render_worker.py",
+      "lines": "run_command, _process_group_options, _kill_process_group",
+      "problema": "subprocess.run(..., timeout=3600) mata 'npx' pero no a sus nietos (node, Chrome). En Windows el temporal queda bloqueado y TemporaryDirectory lanza PermissionError, con lo que el MP4 ya renderizado se descarta. Ademas TimeoutExpired no es RuntimeError, asi que el fallback de navegador no se activaba ante un timeout, solo ante exit distinto de cero.",
+      "fix": "El comando se lanza en su propio grupo de procesos (start_new_session en POSIX, CREATE_NEW_PROCESS_GROUP en Windows) y al expirar se mata el grupo entero. El timeout se convierte en RuntimeError, con lo que el fallback de navegador tambien se activa.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_render.py: un comando colgado lanza RuntimeError y el grupo se mata; el comando se lanza con grupo propio. El comportamiento en Windows no se pudo verificar aqui."
+    },
+    {
+      "id": "AU-30",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "Los defaults de postgres y los de la DATABASE_URL no coincidian en el compose de desarrollo",
+      "file": "docker-compose.dev.yml",
+      "lines": "postgres, api",
+      "problema": "postgres creaba el rol 'postgres' pero la API pedia el rol 'content': en un clon sin .env el stack no levantaba y la API nunca pasaba /healthz.",
+      "fix": "Los defaults de postgres, su healthcheck y la DATABASE_URL usan los mismos valores ('content'), que son los del .env.example.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y defaults contrastados entre los tres sitios."
+    },
+    {
+      "id": "AU-31",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "Imagenes con tag latest: un 'docker compose pull' cambiaba el binario sin que nada lo detectara",
+      "file": "infra/docker-compose.yml",
+      "lines": "cloudflared, mixpost",
+      "problema": "cloudflare/cloudflared:latest, inovector/mixpost:latest y minio/mc:latest; el resto del compose si fijaba versiones.",
+      "fix": "cloudflare/cloudflared:2026.10.7 e inovector/mixpost:v2.6.0, ambas verificadas en el registry. minio/mc desaparece con AU-08.",
+      "status": "aplicado y verificado",
+      "verificacion": "Registry de Docker Hub: HTTP 200 con manifiesto multi-arch para las dos."
+    },
+    {
+      "id": "AU-32",
+      "severidad": "P3",
+      "area": "scripts",
+      "titulo": "generate_api_types.sh guardaba el cuerpo del error como si fuera el esquema y descargaba npx sin version",
+      "file": "scripts/generate_api_types.sh, apps/dashboard/package.json",
+      "lines": "completo",
+      "problema": "'curl -s' sin --fail guardaba un 404 o un 500 en openapi.json y el fallo aparecia despues como error de parseo de openapi-typescript, escondiendo que la API no estaba levantada. Ademas 'npx openapi-typescript' no estaba declarado como dependencia y se descargaba la ultima version en cada ejecucion.",
+      "fix": "'curl -fsS' con comprobacion de salida y mensaje claro; openapi-typescript queda como devDependency fijada (7.13.0) y se invoca con 'npx --no-install'. Se anade ademas scripts/wait_for_api.sh, que el Makefile usa antes de generar los tipos.",
+      "status": "aplicado y verificado",
+      "verificacion": "openapi-typescript 7.13.0 genera types/api.ts correctamente y el build del dashboard sigue en verde."
+    },
+    {
+      "id": "AU-33",
+      "severidad": "P3",
+      "area": "apps/api",
+      "titulo": "El mensaje de limite de medios decia 250 MB con el limite configurable",
+      "file": "apps/api/main.py",
+      "lines": "upload_asset, format_bytes",
+      "problema": "El detalle del 413 estaba fijo en '250 MB' aunque MAX_ASSET_BYTES es configurable: si se cambiaba el limite, el mensaje moria.",
+      "fix": "Se anade format_bytes y el mensaje se deriva del valor configurado.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_api_migrations.py: format_bytes y comprobacion de que el mensaje sale de MAX_ASSET_BYTES."
+    },
+    {
+      "id": "AU-34",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "Codigo muerto: keep_project, duration_in_frames y la rama de status 204",
+      "file": "apps/workers/local_render_worker.py, apps/workers/remotion_project.py, apps/workers/worker_common.py",
+      "lines": "varias",
+      "problema": "keep_project nunca era True, duration_in_frames se calculaba y guardaba sin que nadie lo consumiera y la rama status_code == 204 era inalcanzable (la API devuelve 200 con null).",
+      "fix": "Se eliminan los tres.",
+      "status": "aplicado y verificado",
+      "verificacion": "pyflakes sin avisos y suite completa en verde."
+    },
+    {
+      "id": "AU-35",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "normalize_sources descartaba views_per_hour y el texto de los fragmentos",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "VIDEO_SOURCE_KEYS",
+      "problema": "Los dos campos se calculaban en viral_research y se perdian al normalizar, con lo que el dashboard los pintaba vacios.",
+      "fix": "Se conservan en la lista de claves de la fuente.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de datos entre los dos modulos."
+    },
+    {
+      "id": "AU-36",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "El flag --limit era codigo muerto",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "process_research_job, research_sources",
+      "problema": "Se parseaba pero nunca se leia: la busqueda usaba siempre el default, con lo que el operador creia estar limitando la busqueda y no lo hacia.",
+      "fix": "El limite se propaga desde el parser hasta research_sources.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: el limite llega a la busqueda."
+    },
+    {
+      "id": "AU-37",
+      "severidad": "P3",
+      "area": "apps/dashboard",
+      "titulo": "Los tipos del dashboard se declaraban a mano y los tipos generados no se consumian",
+      "file": "apps/dashboard/app/page.tsx, apps/dashboard/types/api.ts (nuevo), apps/dashboard/types/openapi.json (nuevo)",
+      "lines": "cabecera del fichero",
+      "problema": "scripts/generate_api_types.sh generaba tipos que nadie usaba: page.tsx declaraba Job, Asset y WorkerSession a mano y los tipos se derivaban en silencio.",
+      "fix": "Se versiona el esquema y los tipos generados, y los tipos del dashboard se DERIVAN de components del contrato. 'request', 'progress' y 'output' llegan como dict[str, Any] en el esquema, asi que se sustituyen por el detalle de dominio; todo lo demas viene del contrato.",
+      "status": "aplicado y verificado",
+      "verificacion": "Build en verde. Comprobado que la proteccion funciona: al renombrar 'job_id' en el contrato, el build falla con 8 errores TS2339 (exit 1) y al restaurarlo vuelve a pasar."
+    },
+    {
+      "id": "AU-38",
+      "severidad": "P3",
+      "area": "repo",
+      "titulo": "El target dev del Makefile encadenaba 'up -d' con la generacion de tipos: carrera en el primer make dev",
+      "file": "Makefile, scripts/wait_for_api.sh (nuevo)",
+      "lines": "target generate-types",
+      "problema": "'up -d' es asincrono y generate-types necesita la API viva: en el primer 'make dev' la generacion fallaba porque la API todavia no escuchaba.",
+      "fix": "generate-types espera primero a /healthz con scripts/wait_for_api.sh (timeout de 120 s y mensaje con el comando de los logs).",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del Makefile y del script."
+    },
+    {
+      "id": "AU-39",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "Un 'except: pass' tragaba el heartbeat final de cierre",
+      "file": "apps/workers/worker_common.py",
+      "lines": "run_worker_loop (finally)",
+      "problema": "Era el unico 'except: pass' del paquete y se comia el error del heartbeat de 'stopped'.",
+      "fix": "Ahora se registra como aviso.",
+      "status": "aplicado y verificado",
+      "verificacion": "pyflakes sin avisos."
+    }
+  ],
+  "files_changed": [
+    {
+      "status": "M",
+      "path": ".env.example"
+    },
+    {
+      "status": "M",
+      "path": ".github/workflows/notebook-ci.yml"
+    },
+    {
+      "status": "M",
+      "path": "README.md"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/Dockerfile"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/main.py"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/requirements.txt"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/settings.py"
+    },
+    {
+      "status": "M",
+      "path": "apps/dashboard/Dockerfile"
+    },
+    {
+      "status": "M",
+      "path": "apps/dashboard/app/page.tsx"
+    },
+    {
+      "status": "A",
+      "path": "apps/publisher-service/adapters/mixpost_adapter.py"
+    },
+    {
+      "status": "A",
+      "path": "apps/publisher-service/adapters/open_dispatch_adapter.py"
+    },
+    {
+      "status": "M",
+      "path": "apps/publisher-service/adapters/postiz_adapter.py"
+    },
+    {
+      "status": "M",
+      "path": "apps/publisher-service/main.py"
+    },
+    {
+      "status": "M",
+      "path": "docker-compose.dev.yml"
+    },
+    {
+      "status": "A",
+      "path": "docs/auditoria-2026-11.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/estado-y-trazabilidad-marketing-content-os.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/opciones-publicacion-gratuita.md"
+    },
+    {
+      "status": "M",
+      "path": "infra/.env.production.example"
+    },
+    {
+      "status": "M",
+      "path": "infra/docker-compose.yml"
+    },
+    {
+      "status": "M",
+      "path": "notebooks/01_research_scrapegraph.ipynb"
+    },
+    {
+      "status": "M",
+      "path": "notebooks/02_render_remotion.ipynb"
+    },
+    {
+      "status": "M",
+      "path": "scripts/smoke_local_pipeline.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/smoke_publisher.py"
+    },
+    {
+      "status": "A",
+      "path": "tests/conftest.py"
+    },
+    {
+      "status": "A",
+      "path": "tests/test_media_assets.py"
+    },
+    {
+      "status": "A",
+      "path": "tests/test_mixpost_adapter.py"
+    },
+    {
+      "status": "A",
+      "path": "tests/test_open_dispatch_adapter.py"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_postiz_adapter.py"
+    }
+  ],
+  "diffstat": {
+    ".env.example": {
+      "added": 77,
+      "removed": 32
+    },
+    ".github/workflows/notebook-ci.yml": {
+      "added": 62,
+      "removed": 25
+    },
+    "README.md": {
+      "added": 27,
+      "removed": 3
+    },
+    "apps/api/Dockerfile": {
+      "added": 1,
+      "removed": 0
+    },
+    "apps/api/main.py": {
+      "added": 44,
+      "removed": 46
+    },
+    "apps/api/requirements.txt": {
+      "added": 1,
+      "removed": 0
+    },
+    "apps/api/settings.py": {
+      "added": 18,
+      "removed": 7
+    },
+    "apps/dashboard/Dockerfile": {
+      "added": 3,
+      "removed": 1
+    },
+    "apps/dashboard/app/page.tsx": {
+      "added": 13,
+      "removed": 3
+    },
+    "apps/publisher-service/adapters/mixpost_adapter.py": {
+      "added": 316,
+      "removed": 0
+    },
+    "apps/publisher-service/adapters/open_dispatch_adapter.py": {
+      "added": 503,
+      "removed": 0
+    },
+    "apps/publisher-service/adapters/postiz_adapter.py": {
+      "added": 0,
+      "removed": 168
+    },
+    "apps/publisher-service/main.py": {
+      "added": 101,
+      "removed": 12
+    },
+    "docker-compose.dev.yml": {
+      "added": 54,
+      "removed": 15
+    },
+    "docs/auditoria-2026-11.md": {
+      "added": 111,
+      "removed": 0
+    },
+    "docs/estado-y-trazabilidad-marketing-content-os.json": {
+      "added": 851,
+      "removed": 542
+    },
+    "docs/opciones-publicacion-gratuita.md": {
+      "added": 140,
+      "removed": 0
+    },
+    "infra/.env.production.example": {
+      "added": 40,
+      "removed": 11
+    },
+    "infra/docker-compose.yml": {
+      "added": 80,
+      "removed": 1
+    },
+    "notebooks/01_research_scrapegraph.ipynb": {
+      "added": 24,
+      "removed": 7
+    },
+    "notebooks/02_render_remotion.ipynb": {
+      "added": 21,
+      "removed": 3
+    },
+    "scripts/smoke_local_pipeline.py": {
+      "added": 23,
+      "removed": 17
+    },
+    "scripts/smoke_publisher.py": {
+      "added": 272,
+      "removed": 0
+    },
+    "tests/conftest.py": {
+      "added": 24,
+      "removed": 0
+    },
+    "tests/test_media_assets.py": {
+      "added": 4,
+      "removed": 0
+    },
+    "tests/test_mixpost_adapter.py": {
+      "added": 212,
+      "removed": 0
+    },
+    "tests/test_open_dispatch_adapter.py": {
+      "added": 468,
+      "removed": 0
+    },
+    "tests/test_postiz_adapter.py": {
+      "added": 0,
+      "removed": 102
+    }
+  },
+  "configuration": {
+    "obligatorias_para_arrancar_la_api": [
+      {
+        "variable": "DATABASE_URL",
+        "servicio": "PostgreSQL",
+        "nota": "postgresql://user:pass@host:5432/db"
+      },
+      {
+        "variable": "WORKER_API_TOKEN",
+        "servicio": "-",
+        "nota": "Token compartido API-workers; generar aleatorio de 32 bytes o mas"
+      },
+      {
+        "variable": "S3_ENDPOINT_URL",
+        "servicio": "Cloudflare R2",
+        "nota": "HTTPS obligatorio fuera de localhost"
+      },
+      {
+        "variable": "S3_BUCKET",
+        "servicio": "Cloudflare R2",
+        "nota": "marketing-content-media"
+      },
+      {
+        "variable": "S3_ACCESS_KEY_ID",
+        "servicio": "Cloudflare R2",
+        "nota": "Permiso de escritura y lectura"
+      },
+      {
+        "variable": "S3_SECRET_ACCESS_KEY",
+        "servicio": "Cloudflare R2",
+        "nota": "Permiso de escritura y lectura"
+      }
+    ],
+    "para_los_workers_de_colab": [
+      {
+        "variable": "API_BASE_URL",
+        "servicio": "-",
+        "nota": "HTTPS publico de la API, alcanzable desde Colab"
+      },
+      {
+        "variable": "SCRIPT_SPACE_URL",
+        "servicio": "Hugging Face Space",
+        "nota": "Generacion del guion"
+      },
+      {
+        "variable": "VOICE_STUDIO_URL",
+        "servicio": "Hugging Face Space",
+        "nota": "Sintesis de voz"
+      },
+      {
+        "variable": "HF_TOKEN",
+        "servicio": "Hugging Face",
+        "nota": "Solo lectura sobre Spaces privados"
+      },
+      {
+        "variable": "YOUTUBE_API_KEY",
+        "servicio": "YouTube Data API",
+        "nota": "Opcional: senales de vistas"
+      }
+    ],
+    "para_publicar": [
+      {
+        "variable": "OPEN_DISPATCH_BASE_URL",
+        "servicio": "Open-Dispatch",
+        "nota": "Base de la API. Docker la sobrescribe a http://open-dispatch:8000; en local, http://localhost:8010"
+      },
+      {
+        "variable": "OPEN_DISPATCH_API_TOKEN",
+        "servicio": "Open-Dispatch",
+        "nota": "Token Bearer que exigen /dispatch, /queue y /campaign. El publisher y el contenedor deben usar el mismo"
+      },
+      {
+        "variable": "OPEN_DISPATCH_MEDIA_DIR",
+        "servicio": "Open-Dispatch",
+        "nota": "Raiz del volumen de medios compartido. Debe ser IDENTICA en publisher y scheduler (/media en Docker)"
+      },
+      {
+        "variable": "TIKTOK_ACCESS_TOKEN",
+        "servicio": "TikTok",
+        "nota": "Token de usuario con scope video.publish (Content Posting API v2). Pendiente: vacio"
+      },
+      {
+        "variable": "TIKTOK_PRIVACY_LEVEL",
+        "servicio": "TikTok",
+        "nota": "PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | SELF_ONLY"
+      },
+      {
+        "variable": "IG_USER_ID",
+        "servicio": "Instagram",
+        "nota": "ID del usuario de Instagram Professional. Pendiente: vacio"
+      },
+      {
+        "variable": "IG_TOKEN",
+        "servicio": "Instagram",
+        "nota": "Token de Graph API con permiso de publicacion. Pendiente: vacio"
+      },
+      {
+        "variable": "YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET",
+        "servicio": "YouTube",
+        "nota": "OAuth de escritorio con la API de datos de YouTube v3 activada. Pendiente: vacio"
+      },
+      {
+        "variable": "YOUTUBE_REFRESH_TOKEN",
+        "servicio": "YouTube",
+        "nota": "Token de refresco con scope youtube.upload. Pendiente: vacio"
+      },
+      {
+        "variable": "STORAGE_PUBLIC_BASE_URL",
+        "servicio": "R2",
+        "nota": "Host publico del MISMO bucket; el publisher solo acepta videos de ahi"
+      },
+      {
+        "variable": "MIXPOST_BASE_URL / MIXPOST_API_KEY",
+        "servicio": "Mixpost (alternativa)",
+        "nota": "Solo con PUBLISHER_BACKEND=mixpost y una edicion con API (Pro o Cloud)"
+      }
+    ],
+    "dashboard_build_time": [
+      {
+        "variable": "NEXT_PUBLIC_API_BASE_URL",
+        "nota": "URL de la API para el navegador; se hornea en el bundle"
+      },
+      {
+        "variable": "NEXT_PUBLIC_OPEN_DISPATCH_URL",
+        "nota": "URL del panel de Open-Dispatch; se hornea en el bundle"
+      },
+      {
+        "variable": "NEXT_PUBLIC_MIXPOST_URL",
+        "nota": "URL de la UI de Mixpost (scheduler alternativo); se hornea en el bundle"
+      }
+    ],
+    "declaradas_pero_no_leidas_por_el_codigo": [
+      "REDIS_URL (Redis solo existe bajo el perfil future-queue; ningun modulo lo usa)",
+      "YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, TIKTOK_CLIENT_KEY, META_APP_ID, META_APP_SECRET (las usa la UI de Mixpost al autorizar cada cuenta)"
+    ]
+  },
+  "verification": [
+    {
+      "comando": ".venv\\Scripts\\python -m pytest -q",
+      "resultado": "48 passed, 2 warnings"
+    },
+    {
+      "comando": ".venv\\Scripts\\python scripts/smoke_publisher.py",
+      "resultado": "SMOKE OK: publisher <-> Open-Dispatch"
+    },
+    {
+      "comando": "import main (con el .env real del repo)",
+      "resultado": "OK"
+    },
+    {
+      "comando": "import main (sin configuracion)",
+      "resultado": "ValidationError: fail-fast correcto"
+    },
+    {
+      "comando": "docker compose -f docker-compose.dev.yml config",
+      "resultado": "OK"
+    },
+    {
+      "comando": "docker compose --env-file .env -f infra/docker-compose.yml --profile publisher --profile dispatch config",
+      "resultado": "OK"
+    },
+    {
+      "comando": "docker compose --env-file .env -f infra/docker-compose.yml --profile publisher --profile scheduler config",
+      "resultado": "OK (Mixpost sigue siendo alternativa valida)"
+    },
+    {
+      "comando": "pyflakes sobre apps, packages, scripts y tests",
+      "resultado": "0 problemas"
+    },
+    {
+      "comando": "compile() de las celdas de codigo de ambos notebooks",
+      "resultado": "compilan ambas"
+    },
+    {
+      "comando": "git fsck",
+      "resultado": "14 commits, sin objetos corruptos"
+    },
+    {
+      "comando": "actionlint v1.7.12 .github/workflows/notebook-ci.yml",
+      "resultado": "0 problemas (schema de GitHub Actions)"
+    },
+    {
+      "comando": "prueba end-to-end real contra la pila Docker (publisher -> Open-Dispatch -> worker)",
+      "resultado": "OK: dispatch con unit_id y 3 entradas encoladas, formatos verificados en /campaign, medio descargado al volumen compartido y worker reclamando una unidad vencida con reintento programmed. Detalle en infra_verificacion.prueba_end_to_end_real."
+    },
+    {
+      "comando": "rebuild + recreacion de la pila y prueba end-to-end tras los arreglos E2E-01..E2E-03",
+      "resultado": "OK: API viva con /docs y /openapi.json en 200, dispatch de 3 plataformas encolado, medio descargado al volumen compartido con propietario dispatch:dispatch y borrado por el worker sin root. Suite: 52 tests passed."
+    },
+    {
+      "comando": "recorrido completo en local: research -> guion -> voz -> render -> aprobar -> publicar",
+      "resultado": "OK. Research job 36e18c64: virales de YouTube, guion de Qwen (2 min) y voz de OmniVoice (9 min, WAV de 1.820.700 bytes) subido a R2. Render job 57b28adf: npm install (3 min), remotion browser ensure y remotion render (4,5 min) con el Chrome local; MP4 de 2.728.400 bytes en renders/57b28adf-9340-4dc0-9eeb-3cb5b9e708f9.mp4, validado con ffprobe: h264, 1080x1920, 30 fps, AAC 48 kHz estereo, 38,91 s de duracion y volumen medio -22,6 dB. El render queda en 'awaiting_approval'. Al aprobar: la cola de Open-Dispatch pasa de 9 a 10 con la unidad f8d8f5a3-a4f9-4c93-97cc-3624294a0131 para youtube, y el trabajo queda en 'approved' con la URL publica, la unidad y la respuesta del publicador."
+    },
+    {
+      "comando": "GET del MP4 por la URL publica de r2.dev",
+      "resultado": "HTTP 200 con User-Agent de navegador, Instagram y TikTok."
+    },
+    {
+      "comando": "python -m pytest -q (suite completa tras la auditoria del 9-nov-2026)",
+      "resultado": "131 passed (antes 63). Incluye 68 tests nuevos de los workers, la API y el publisher."
+    },
+    {
+      "comando": "la suite en el venv exacto de la CI (lockfile + dev + adapters + workers)",
+      "resultado": "131 passed con las versiones bloqueadas."
+    },
+    {
+      "comando": "uv pip install --dry-run -r apps/api/requirements-dev.txt -r packages/python/adapters/requirements.txt",
+      "resultado": "exit 0. Antes: ResolutionImpossible."
+    },
+    {
+      "comando": "pip install --no-cache-dir --require-hashes -r apps/api/requirements.lock.txt",
+      "resultado": "36 paquetes, exit 0. Es el comando exacto del Dockerfile de la API."
+    },
+    {
+      "comando": "actionlint v1.7.12 .github/workflows/*.yml",
+      "resultado": "exit 0. Antes, en el orden anterior del workflow, el paso moria con exit 3."
+    },
+    {
+      "comando": "medicion de las 16 rutas de la API con TestClient, sin cabecera Authorization",
+      "resultado": "6 rutas con token (401) y 10 abiertas. Las dos nuevas abiertas son /approve y /reject (ver AU-01)."
+    },
+    {
+      "comando": "dispatch sin credencial contra un scheduler Open-Dispatch simulado",
+      "resultado": "HTTP 200 y unidad encolada para tiktok e instagram. Ver AU-02."
+    },
+    {
+      "comando": "npm run --prefix apps/dashboard build",
+      "resultado": "exit 0 con los tipos derivados del contrato. Con el contrato alterado a proposito: 8 errores TS2339 y exit 1."
+    },
+    {
+      "comando": "pyflakes sobre apps, packages, scripts y tests",
+      "resultado": "0 problemas."
+    }
+  ],
+  "open_decisions": [
+    {
+      "id": "D1",
+      "titulo": "Modelo de autenticacion de la API",
+      "estado": "aplazado por decision del usuario",
+      "impacto": "10 de 16 rutas publicas (medido el 9-nov-2026, antes 8 de 14). Incluye POST /v1/jobs/{id}/approve y /reject, que disparan la publicacion, y POST /v1/publish del publisher, que se puede llamar directamente para saltarse la revision humana. Ver AU-01 y AU-02.",
+      "opciones": [
+        "Token de sesion para el dashboard y CORS cerrado",
+        "API publica de solo lectura y escritura restringida",
+        "Proxy inverso que autentique por delante (el worker-gateway ya existe)"
+      ],
+      "decision_del_usuario": "El 9-nov-2026 el usuario decidio aplazar la autenticacion de la publicacion (Instagram, YouTube y TikTok) hasta que todo lo demas este resuelto, y que se le solicite explicitamente. La decision sigue abierta: la superficie de ataque actual es la de AU-01 y AU-02.",
+      "mitigaciones_aplicadas": [
+        "nginx con limite de ritmo, limite de conexiones y timeouts (AU-09)",
+        "puertos del compose atados a 127.0.0.1 y redes segmentadas (AU-20, AU-31)",
+        "el gateway solo reenvia las rutas de worker, que si exigen token"
+      ],
+      "pendiente_de": "Hay que decidir el modelo: token de sesion para el dashboard, API publica de solo lectura con escritura restringida, o un proxy inverso que autentique por delante. El worker-gateway ya existe y es el punto natural."
+    },
+    {
+      "id": "D2",
+      "titulo": "Scheduler de publicacion",
+      "estado": "resuelto",
+      "impacto": "Lite (gratis) no incluye la API REST: el publisher no puede automatizar. Lite tampoco publica en Instagram, TikTok ni YouTube.",
+      "opciones": [
+        "Mixpost Pro (USD 299 unico) con API y todas las plataformas",
+        "Mixpost Cloud (suscripcion)",
+        "Lite y publicar a mano desde la UI (Facebook Pages, X, Mastodon)"
+      ],
+      "decision": "Open-Dispatch (MIT). Cubre TikTok, Instagram y YouTube con API propia y sin coste. Mixpost Lite se descarta como scheduler automatico porque su API REST solo existe en Pro (299 USD) o Cloud; el adaptador de Mixpost se conserva como alternativa seleccionable con PUBLISHER_BACKEND=mixpost."
+    },
+    {
+      "id": "D3",
+      "titulo": "Postiz o Mixpost",
+      "estado": "resuelto",
+      "decision": "Open-Dispatch. El adaptador de Postiz se elimino primero y el de Mixpost despues; ambos siguen recuperables desde el historial de git."
+    },
+    {
+      "id": "D4",
+      "titulo": "Cuenta de los Spaces de Hugging Face",
+      "estado": "abierto",
+      "impacto": "El .env apunta a javiertarazon-* mientras deploy_hf_spaces.sh deriva el id del usuario autenticado: divergen al publicar con otra cuenta."
+    },
+    {
+      "id": "D5",
+      "titulo": "Credenciales OAuth de las tres redes",
+      "estado": "abierto",
+      "impacto": "Sin TIKTOK_ACCESS_TOKEN, IG_USER_ID/IG_TOKEN ni el trio de YouTube, Open-Dispatch encola las unidades pero ningun adaptador puede publicarlas. Las aprobaciones de Meta y TikTok tardan dias o semanas; YouTube es inmediato. El acceso publico del bucket R2 ya esta verificado y no es un bloqueante.",
+      "opciones": [
+        "YouTube ya es inmediato: crear el cliente OAuth y el refresh_token",
+        "Meta (Instagram) y TikTok requieren aprobacion de la app de desarrollador: dias o semanas",
+        "Publicar primero en YouTube y dejar TikTok e Instagram para cuando Meta responda"
+      ],
+      "bloqueante_r2_resuelto": true
+    }
+  ],
+  "how_to_continue": [
+    "Reconstruir el historial si se pierde: el .git original solo tenia objects/, sin HEAD/config/refs. Se reconstruyo con git init + git branch -f main <sha> + git reset --mixed.",
+    "Registrar las credenciales de GitHub: no hay gh CLI ni credential helper con entradas. Usar un PAT con scope repo y ejecutar el push, o instalar gh y ejecutar gh auth login.",
+    "Levantar el scheduler de publicacion: docker compose --env-file .env -f infra/docker-compose.yml --profile publisher --profile dispatch up -d --build.",
+    "Poner las credenciales de las redes en el .env (vacias ahora): TIKTOK_ACCESS_TOKEN, IG_USER_ID e IG_TOKEN, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET y YOUTUBE_REFRESH_TOKEN.",
+    "Habilitar el acceso publico (r2.dev) del bucket marketing-content-media: sin el, TikTok e Instagram no pueden descargar el video.",
+    "Comprobar el flujo completo sin credenciales: python scripts/smoke_publisher.py.",
+    "Ejecutar el smoke test end-to-end del pipeline: python scripts/smoke_local_pipeline.py con el stack de dev levantado.",
+    "Reconstruir el .git de forma permanente: git add -A && git commit -m '...' && git push -u origin main."
+  ],
+  "secrets_policy": "El .env contiene credenciales reales y esta en .gitignore (no se versiona). .env.example e infra/.env.production.example solo llevan placeholders.",
+  "scheduler_open_dispatch": {
+    "proyecto": "https://github.com/Matthew-Selvam/Open-Dispatch",
+    "licencia": "MIT",
+    "commit_verificado": "773dd54d4cec24a5995d8c722e9f02545cfba013",
+    "por_que": "Es el unico candidato MIT que publica en TikTok, Instagram y YouTube a la vez y expone API propia. Postiz es AGPL y exige Temporal; Mixpost Lite no tiene API; postiz-cheap es MIT pero depende de MuAPI, que es de pago.",
+    "api": {
+      "autenticacion": "Authorization: Bearer $OPEN_DISPATCH_API_TOKEN en todas las rutas salvo /healthz",
+      "dispatch": "POST /dispatch -> 202 {\"unit_id\": \"<uuid>\", \"enqueued\": [{\"id\", \"target\", \"scheduled_for\"}]}",
+      "consulta": "GET /queue, GET /campaign/{unit_id}, POST /campaign/{unit_id}/cancel, GET /queue/{row_id}/json, POST /queue/{row_id}/retry",
+      "destinos": "plataforma o plataforma:cuenta (plataforma en [a-z]+, cuenta en [a-z0-9._-]+); maximo 20 por dispatch",
+      "payload": "maximo 100 KB; scheduled_for en ISO-8601; el body es una ContentUnit"
+    },
+    "formatos_por_plataforma": {
+      "tiktok_post": "video_url (URL publica), caption (<=2200), privacy (PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | SELF_ONLY)",
+      "instagram_post": "caption (<=2200), video_url (URL publica, se publica como REEL), image_url o carousel_image_urls (2-10)",
+      "youtube_short": "video_path (RUTA RELATIVA sin '..' bajo OPEN_DISPATCH_MEDIA_DIR), title (<=100), description (<=5000), tags, privacy (public | unlisted | private)"
+    },
+    "reglas_criticas": [
+      "TikTok e Instagram descargan el video de una URL publica: hace falta STORAGE_PUBLIC_BASE_URL y el bucket con acceso r2.dev.",
+      "YouTube sube el archivo desde disco: publisher y Open-Dispatch deben compartir volumen con la MISMA ruta.",
+      "Un dispatch puede llevar varias claves de formats a la vez: el worker entrega la misma unidad a cada adaptador."
+    ],
+    "credenciales_por_red": {
+      "tiktok": [
+        "TIKTOK_ACCESS_TOKEN",
+        "TIKTOK_PRIVACY_LEVEL"
+      ],
+      "instagram": [
+        "IG_USER_ID",
+        "IG_TOKEN"
+      ],
+      "youtube": [
+        "YOUTUBE_CLIENT_ID",
+        "YOUTUBE_CLIENT_SECRET",
+        "YOUTUBE_REFRESH_TOKEN"
+      ]
+    },
+    "estado_de_cola": [
+      "queued",
+      "publishing",
+      "published",
+      "failed",
+      "dead",
+      "canceled"
+    ],
+    "servicios_en_el_compose": {
+      "open-dispatch": "API y panel web en el puerto 8010 (perfil 'dispatch')",
+      "open-dispatch-worker": "worker que consume la cola (perfil 'dispatch')",
+      "publisher": "encola las publicaciones y descarga los MP4 al volumen compartido"
+    },
+    "volumen_compartido": "open_dispatch_media montado en /media en los tres servicios",
+    "limitaciones_conocidas": [
+      {
+        "ambito": "cola del scheduler",
+        "detalle": "Sin DATABASE_URL ni REDIS_URL, Open-Dispatch usa su backend JSONL, que upstream documenta como 'single-process': api/queue.py usa un threading.Lock, que no protege entre el proceso de la API y el del worker. El despliegue del compose reproduce el compose de referencia de upstream.",
+        "mitigacion": "Extender la imagen con psycopg2-binary y definir DATABASE_URL: el backend de Postgres usa SELECT ... FOR UPDATE SKIP LOCKED sobre la tabla open_dispatch_queue y admite varios procesos. La imagen oficial no incluye psycopg2 ni redis.",
+        "estado": "documentado, no bloqueante para uso normal"
+      },
+      {
+        "ambito": "descubrimiento de canales",
+        "detalle": "Open-Dispatch no expone un endpoint JSON con las plataformas configuradas por variable de entorno (solo el panel HTML). GET /v1/integrations combina el .env compartido con GET /api/profiles.",
+        "mitigacion": "Implementado en el adaptador; documentado en el README.",
+        "estado": "resuelto"
+      }
+    ],
+    "verificacion_acceso_publico_r2": {
+      "metodo": "Se subio un objeto canario al bucket marketing-content-media con las credenciales S3, se pidio SIN credenciales contra STORAGE_PUBLIC_BASE_URL con cuatro User-Agent distintos y se borro el canario. Comprobacion previa de permisos: escritura y borrado permitidos, y el listado del bucket esta vacio.",
+      "resultado": {
+        "navegador": "HTTP 200 (contenido correcto)",
+        "instagram (facebookexternalhit)": "HTTP 200",
+        "tiktok": "HTTP 200",
+        "python-urllib (User-Agent por defecto)": "HTTP 403 con 'error code: 1010'",
+        "listado del bucket (GET /)": "HTTP 404, no es enumerable"
+      },
+      "conclusion": "El bucket SI tiene acceso publico r2.dev y TikTok e Instagram podran descargar el video. El 403/1010 no es que el objeto sea privado: es Cloudflare bloqueando la firma del User-Agent Python-urllib. Si una plataforma no descarga el video, hay que mirar el User-Agent, no el estado del bucket.",
+      "nota_de_seguridad": "El acceso publico de R2 es por clave, no por listado. Las claves de los objetos son aleatorias y no se enumeran, pero quien conozca la clave completa puede descargar el objeto.",
+      "estado": "resuelto"
+    }
+  },
+  "ci_estado": {
+    "estado": "bloqueada por la cuenta de GitHub (facturacion) Y por tres defectos del propio repositorio, ya corregidos: en cuanto se regularice el billing, la CI deberia poder ejecutarse.",
+    "workflow": ".github/workflows/notebook-ci.yml (id 408761909)",
+    "firma_de_los_runs": {
+      "contexto": "Firma observada mientras el repositorio era privado. Desaparecio al pasarlo a publico.",
+      "workflow_name": "(vacio)",
+      "workflow_path": "BuildFailed",
+      "workflow_state": "deleted",
+      "conclusion": "startup_failure",
+      "jobs": 0,
+      "check_runs": 0,
+      "runner_asignado": "ninguno",
+      "logs": "404 (no existen)"
+    },
+    "runs_observados": [
+      {
+        "id": "42508035670",
+        "numero": 9,
+        "sha": "8cc4d52",
+        "fecha": "2026-11-08",
+        "conclusion": "failure",
+        "nota": "Ultimo run. 2 s de duracion, runner_id 0: el job se construye pero no arranca (CI-01)."
+      },
+      {
+        "id": "42506903456",
+        "numero": 8,
+        "sha": "27187d1",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42503752735",
+        "numero": 7,
+        "sha": "76f7f97",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42499708259",
+        "numero": 6,
+        "sha": "5179304",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42492157549",
+        "numero": 5,
+        "sha": "bf41c2d",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42491294995",
+        "numero": 4,
+        "sha": "990901d",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42205250745",
+        "numero": 3,
+        "sha": "71a0305",
+        "fecha": "2026-11-06",
+        "conclusion": "failure",
+        "nota": "Repite la anotacion de facturacion y vuelve a arrancar sin runner."
+      },
+      {
+        "id": "42204204757",
+        "numero": 2,
+        "sha": "daa5734",
+        "fecha": "2026-11-06",
+        "conclusion": "failure",
+        "jobs": 1,
+        "check_run": "127846637377",
+        "nota": "Primer run con job real tras pasarlo a publico. Su anotacion da la causa exacta (CI-01)."
+      },
+      {
+        "id": "42130918983",
+        "numero": 1,
+        "sha": "b941c19",
+        "fecha": "2026-11-05",
+        "conclusion": "failure",
+        "visibilidad": "privado"
+      }
+    ],
+    "prueba_descartante": "Se subio un workflow minimo de tres lineas (.github/workflows/probe.yml: un job ubuntu-latest con un echo) y fallo con la MISMA firma. Eso descarta YAML, runner, secrets, reusable workflows y el propio contenido del fichero: el fallo ocurre en GitHub antes de construir el grafo de jobs. La sonda se retiro despues.",
+    "bug_real_encontrado_y_corregido": "'privileged: true' no es una clave valida dentro de 'services:' de GitHub Actions (las validas son credentials, env, image, options, ports y volumes). Venia del workflow original del repo, por lo que su CI nunca llego a ejecutar. Corregido a 'options: --tls=false --privileged' y validado con actionlint.",
+    "validacion_del_fichero": "actionlint v1.7.12 pasa sin avisos sobre el workflow real, y el script Python del paso 'Validate notebooks compile' sigue siendo Python valido. La CI incluye un paso que ejecuta actionlint, y ahora ese paso va DESPUES del checkout, con lo que de verdad valida los workflows del repositorio.",
+    "accion_requerida_del_usuario": [
+      "Settings -> Billing and plans -> Payment information: pagar la factura pendiente o corregir la tarjeta que fallo. GitHub bloquea la cuenta completa cuando hay saldo impagado.",
+      "Comprobar en https://github.com/settings/billing que la cuenta ya no figura como bloqueada y que no queda ninguna factura vencida.",
+      "En cuanto se regularice, relanzar la CI desde la pestana Actions: el workflow tiene workflow_dispatch para eso, sin necesidad de un commit.",
+      "Si el pago esta al dia y la cuenta sigue bloqueada, abrir un ticket a soporte con la anotacion 'your account is locked due to a billing issue' y el run id 42204250745."
+    ],
+    "referencias": [
+      "https://github.com/orgs/community/discussions/208350",
+      "https://github.com/orgs/community/discussions/208368",
+      "https://github.com/orgs/community/discussions/208822",
+      "https://github.com/orgs/community/discussions/207900"
+    ],
+    "nota_visibilidad": "El repositorio paso a publico el 6-nov-2026 (auditoria previa del historial: 79 blobs revisados, cero secretos y cero firmas de credenciales). Con el repo publico los minutos de Actions no dependen del billing una vez desbloqueada la cuenta; el bloqueo actual es de la cuenta, no del repositorio.",
+    "causa_confirmada": "Anotacion de GitHub en el check-run 127846637377 del run 42204204757 (06-nov-2026): 'The job was not started because your account is locked due to a billing issue.' El workflow se reconoce y construye el job, pero ningun runner lo arranca: runner_id 0, steps [] y 2 s de duracion.",
+    "secuencia_del_diagnostico": [
+      "Los runs BuildFailed/startup_failure con 0 jobs (repo privado) se reprodujeron con un workflow minimo de tres lineas: eso descarto YAML, runner, secrets y reusable workflows.",
+      "actionlint v1.7.12 paso sin avisos sobre el workflow real, confirmando que el fichero era valido.",
+      "Al pasar el repositorio a publico, GitHub reconocio el workflow ('Notebook CI'), creo el job 'test' y dejo de aparecer la firma BuildFailed: el bloqueo de construccion desaparece, pero el job sigue sin arrancar.",
+      "La anotacion del check-run da la causa exacta: la cuenta esta bloqueada por facturacion. Eso impide ejecutar Actions con independencia de la visibilidad del repositorio."
+    ],
+    "nota_confirmada_por_ejecucion": "El run 42205250745 (push 71a0305, job 127850130738) repite la anotacion exacta y vuelve a arrancar sin runner (runner_id 0, steps 0). Confirma que el bloqueo depende solo de la cuenta y que ningun cambio en el repositorio lo mueve.",
+    "bloqueadores_de_la_ci": [
+      {
+        "id": "CI-01",
+        "origen": "externo",
+        "estado": "pendiente de accion del usuario",
+        "detalle": "La cuenta esta bloqueada por saldo impagado: la anotacion del check-run 127846637377 del run 42204204757 dice literalmente 'The job was not started because your account is locked due to a billing issue'. Ningun runner arranca: runner_id 0, steps [] y 2 s de duracion."
+      },
+      {
+        "id": "CI-02",
+        "origen": "repositorio",
+        "estado": "corregido (AU-05)",
+        "detalle": "El paso de actionlint estaba antes de actions/checkout: sin el repositorio en disco, actionlint recibia la ruta literal y salia con codigo 3. El job moria en el primer paso y ningun check posterior se ejecutaba."
+      },
+      {
+        "id": "CI-03",
+        "origen": "repositorio",
+        "estado": "corregido (AU-06)",
+        "detalle": "El paso 'Install dependencies' era irresoluble: gradio_client>=1.4,<2 en la API contra gradio_client>=2,<3 en los adaptadores. Ademas el servicio dind hacia inalcanzable el stack para el runner (AU-07) y el compose de dev pedia imagenes de MinIO retiradas de Docker Hub (AU-08)."
+      }
+    ],
+    "total_runs": 14,
+    "runs_verdes": 0,
+    "nota_del_9_nov": "14 runs y ninguno verde. Los cuatro 'startup_failure' del 5-nov fueron el workflow invalido ya corregido (la clave 'privileged' dentro de 'services'). Los diez 'failure' posteriores comparten la firma de la facturacion. Ademas de esa causa externa, la auditoria del 9-nov encontro tres bloqueadores propios del repositorio (CI-02, CI-03 y AU-08) que habrian hecho fallar la CI aun con la cuenta desbloqueada. Los tres estan corregidos."
+  },
+  "repository_visibility": {
+    "estado": "publico",
+    "cambio": "2026-11-06, a peticion del usuario",
+    "motivo": "Los repos privados de GitHub sujetan la construccion de los workflows a la facturacion de minutos de Actions: si hay una tarjeta fallida o el limite de gasto sin resolver, GitHub bloquea la creacion de los jobs antes de que exista el grafo, con la firma BuildFailed / startup_failure / 0 jobs. Con el repo publico los minutos de Actions no dependen del billing.",
+    "auditoria_de_secretos_previa": {
+      "metodo": "Se recorrieron los 79 blobs del historial completo y se buscaron (1) los valores reales de los ficheros de credenciales locales, valor a valor, y (2) firmas de credenciales conocidas (AWS/R2, Hugging Face, GitHub, OpenAI, Google, Slack, JWT, claves privadas PEM).",
+      "resultado": "Ningun secreto en el historial: cero firmas de credenciales y cero valores reales de .env. Lo unico expuesto son identificadores no sensibles: las URLs de los Spaces de Hugging Face (que siguen siendo privados), el nombre del bucket de medios y valores de localhost.",
+      "fichero": "referencia: auditoria ejecutada sobre el historial antes del cambio"
+    },
+    "consecuencia": "El codigo del proyecto queda visible para cualquiera. Las credenciales siguen en el .env local, que esta en .gitignore y no se versiona."
+  },
+  "infra_verificacion": {
+    "entorno": "Docker Desktop 29.7.2 (linux/amd64) levantado en esta maquina el 6-nov-2026 para la primera construccion y arranque reales.",
+    "imagenes_construidas": [
+      "infra-publisher:latest (250 MB) - apps/publisher-service/Dockerfile",
+      "infra-api:latest (334 MB) - apps/api/Dockerfile",
+      "infra-dashboard:latest (1.18 GB) - apps/dashboard/Dockerfile",
+      "infra-open-dispatch:latest y infra-open-dispatch-worker:latest (388 MB) - construidas desde https://github.com/Matthew-Selvam/Open-Dispatch.git#773dd54"
+    ],
+    "nota": "Los contenedores se levantan con: docker compose --env-file .env -f infra/docker-compose.yml --profile publisher --profile dispatch up -d --build. El servicio open-dispatch se construye desde el repositorio oficial fijado al commit 773dd54d4cec24a5995d8c722e9f02545cfba013.",
+    "prueba_end_to_end_real": {
+      "fecha": "2026-11-06",
+      "pila": "postgres (healthy) + api + dashboard + publisher + open-dispatch (healthy) + open-dispatch-worker, todos levantados con Docker 29.7.2",
+      "pasos_y_resultados": [
+        "GET http://127.0.0.1:8010/healthz -> 200.",
+        "GET http://127.0.0.1:8001/v1/integrations -> 200 con lista vacia, correcto: no hay credenciales OAuth configuradas.",
+        "POST http://127.0.0.1:8001/v1/publish con video_url publica de R2 y platforms [tiktok, instagram, youtube] -> 200 con unit_id y 3 entradas encoladas (una por plataforma) con scheduled_for en UTC.",
+        "GET /queue -> la cola pasa de 0 a 3 entradas; GET /campaign/{unit_id} devuelve los tres formatos con la forma exacta que exige Open-Dispatch: tiktok_post {video_url, caption, privacy}, instagram_post {caption, video_url} y youtube_short {video_path RELATIVA 'renders/<fichero>.mp4' sin '..', title, description, tags, privacy}.",
+        "El publisher descarga el medio al volumen compartido: en el contenedor de Open-Dispatch aparece /media/renders/<fichero>.mp4. Queda probado que publisher y worker comparten el volumen con la misma ruta, que es lo que exige youtube_short.",
+        "Un dispatch ya vencido: el worker lo reclama ('publishing 1 due row(s)'), intenta publicar y falla de forma controlada con 'TIKTOK_ACCESS_TOKEN missing', registra attempts=1 en la fila y programa reintento con backoff. El worker no se cae.",
+        "POST /campaign/{unit_id}/cancel -> 200 y las 4 filas pasan a 'canceled'."
+      ],
+      "limpieza": "Objetos de prueba borrados de R2 (bucket a 0 objetos) y fichero de prueba eliminado del volumen de medios. La cola conserva las filas canceladas como historial.",
+      "unica_bloqueante_restante": "Las credenciales OAuth de TikTok, Instagram y YouTube siguen vacias en .env. Es el unico punto que impide una publicacion real."
+    },
+    "nota_permisos_volumen_compartido": "El contenedor de Open-Dispatch corre como uid 999 (dispatch) y el publisher-service corre como root, porque su Dockerfile no fija USER. El publisher crea los ficheros de /media/renders como root, de modo que el worker puede leerlos (modo 644) pero no borrarlos: la limpieza exige 'docker exec -u root'. No rompe la publicacion, pero conviene alinear la propiedad de los ficheros.",
+    "estado_tras_arranque": "postgres healthy, open-dispatch healthy, api, dashboard, publisher y open-dispatch-worker Up. Se verifico GET /docs y GET /openapi.json de la API con HTTP 200 y que el contenedor sobrevive mas de 30 s."
+  },
+  "defectos_corregidos_por_ejecucion_real": [
+    {
+      "id": "E2E-01",
+      "severidad": "P0",
+      "area": "apps/api",
+      "titulo": "La API no arrancaba dentro de Docker: IndexError al importar settings",
+      "file": "apps/api/settings.py",
+      "problema": "env_file=Path(__file__).parents[2] / '.env'. En el repositorio settings.py vive en apps/api/ y parents[2] es la raiz, pero en la imagen el fichero esta en /app/ y solo hay dos parents, de modo que la linea lanzaba IndexError: 2 y el contenedor de la API terminaba con codigo 1 al arrancar. La suite local no lo detectaba porque nunca se ejecuto el contenedor.",
+      "fix": "Se extrajo resolve_env_file(): comprueba len(here.parents) >= 3 antes de indexar, usa la variable ENV_FILE si esta definida y, si no hay fichero, devuelve una ruta inexistente que pydantic-settings ignora. En Docker el .env no se copia a la imagen: compose lo inyecta como variables de entorno.",
+      "regresion": "tests/test_api_settings_layout.py: copia settings.py a una ruta superficial equivalente a /app y comprueba que el import no lanza IndexError, mas la comprobacion de que el modulo se importa sin fichero .env.",
+      "status": "aplicado y verificado",
+      "verificacion": "Contenedor infra-api-1 Up, GET /docs -> 200, GET /openapi.json -> 200, y el proceso sigue vivo tras 30 s."
+    },
+    {
+      "id": "E2E-02",
+      "severidad": "P1",
+      "area": "apps/publisher-service",
+      "titulo": "El publisher corria como root y dejaba el volumen de medios con ficheros que el worker no podia borrar",
+      "file": "apps/publisher-service/Dockerfile",
+      "problema": "El Dockerfile no fijaba USER, asi que el contenedor corria como root. Los ficheros que crea en el volumen compartido /media quedaban como root: el worker de Open-Dispatch (uid 999) podia leerlos por el modo 644, pero no borrarlos ni sustituirlos (rm: Permission denied).",
+      "fix": "El Dockerfile crea el usuario dispatch con uid 999, precrea /media con esa propiedad y arranca con USER 999:999, de modo que el volumen compartido tiene el mismo propietario este contenedor lo cree o no. PYTHONDONTWRITEBYTECODE=1 evita intentar escribir .pyc en /app.",
+      "status": "aplicado y verificado",
+      "verificacion": "docker exec infra-publisher-1 id -> uid=999(dispatch). El fichero creado en /media/renders queda como dispatch:dispatch y el worker lo borra sin privileged: 'removed ...mp4'."
+    },
+    {
+      "id": "E2E-03",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "El worker aparecia unhealthy de forma falsa",
+      "file": "infra/docker-compose.yml",
+      "problema": "La imagen de Open-Dispatch trae un HEALTHCHECK que consulta el puerto 8000. El contenedor open-dispatch-worker no sirve HTTP (ejecuta python -m scheduler.worker), asi que el chequeo fallaba siempre y Docker lo marcaba unhealthy aunque el proceso funcionase.",
+      "fix": "Se desactiva el healthcheck heredado en el servicio open-dispatch-worker con 'healthcheck: disable: true'. La salud real del worker se comprueba en sus logs.",
+      "status": "aplicado y verificado",
+      "verificacion": "Tras recrear la pila, todos los contenedores aparecen Up o healthy y ninguno en unhealthy."
+    },
+    {
+      "id": "E2E-04",
+      "severidad": "P0",
+      "area": "apps/api, packages/python/core, apps/dashboard",
+      "titulo": "El video se publicaba sin revision humana: no existia estado de aprobacion",
+      "file": "apps/api/main.py, packages/python/core/schemas.py, apps/dashboard/app/page.tsx",
+      "problema": "El job de render terminaba en 'succeeded' y el dashboard solo ofrecia 'Descargar MP4' y un enlace manual a Mixpost. No habia forma de revisar el video ni de bloquear la publicacion, y el publisher-service no estaba cableado a nada.",
+      "fix": "JobStatus gana 'awaiting_approval', 'approved' y 'rejected' (se recrea la restriccion CHECK de la tabla jobs). complete_job deja el render en 'awaiting_approval'. Se anaden POST /v1/jobs/{id}/approve y POST /v1/jobs/{id}/reject. Al aprobar, la API construye la URL publica del MP4 y la encola en el scheduler via publisher-service; si el publicador falla, la aprobacion sigue siendo valida y el error queda en output.publication.error. El dashboard muestra los botones Aprobar y publicar y Rechazar.",
+      "regresion": "tests/test_approval_gate.py (11 tests).",
+      "status": "aplicado y verificado",
+      "verificacion": "Sobre el video real: el render queda en 'awaiting_approval' con el MP4 en R2; al aprobar, la cola de Open-Dispatch pasa de 9 a 10 con la unidad f8d8f5a3-a4f9-4c93-97cc-3624294a0131 y el trabajo queda en 'approved'. Ademas, contra jobs de prueba: rechazar no encola nada, reaprobar reintenta y aprobar un rechazado da 409."
+    },
+    {
+      "id": "E2E-05",
+      "severidad": "P1",
+      "area": "apps/voice-studio-space",
+      "titulo": "El Space de voz no podia arrancar: omnivoice no estaba en requirements.txt",
+      "file": "apps/voice-studio-space/requirements.txt",
+      "problema": "app.py hace 'from omnivoice import OmniVoice' pero la dependencia no figuraba en requirements.txt, de modo que el Space moria al importar. El paquete si existe en PyPI (omnivoice 0.2.1) y el modelo k2-fsa/OmniVoice existe en Hugging Face.",
+      "fix": "Se anade 'omnivoice>=0.2.1,<1' a requirements.txt.",
+      "status": "aplicado",
+      "verificacion": "El Space desplegado responde con token y expone el api_name 'predict', y genero una narracion real de 1.820.700 bytes. El fallo de import solo se reproduciria al redesplegar."
+    },
+    {
+      "id": "E2E-06",
+      "severidad": "P1",
+      "area": "apps/workers",
+      "titulo": "El worker de render moria antes de empezar al buscar ffmpeg",
+      "file": "apps/workers/local_render_worker.py",
+      "problema": "WINGET_FFMPEG_GLOBS estaba escrita como una CADENA, no como una tupla de patrones: faltaba la coma final, asi que el bucle de find_media_tool la recorria caracter a caracter y glob('/') lanzaba NotImplementedError: Non-relative patterns are unsupported. El error ocultaba que ffmpeg si estaba instalado.",
+      "fix": "Coma final (convierte la constante en tupla) y Path(SystemDrive) en lugar de la unidad C: hardcodeada.",
+      "status": "aplicado y verificado",
+      "verificacion": "ffprobe y ffmpeg se localizan en la carpeta de WinGet, Chrome en Program Files y npm.cmd en Program Files/nodejs."
+    },
+    {
+      "id": "E2E-07",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Los workers no se podian ejecutar con su ruta",
+      "file": "apps/workers/local_research_worker.py, apps/workers/local_render_worker.py",
+      "problema": "Hacian 'from apps.workers import ...' pero al ejecutarlos con su ruta, sys.path[0] es el directorio del modulo y 'apps' no era importable.",
+      "fix": "Bootstrap de sys.path con la raiz del repositorio.",
+      "status": "aplicado y verificado",
+      "verificacion": "Ambos workers responden a --help con su ruta directa."
+    }
+  ],
+  "pipeline_local": {
+    "proposito": "Ejecutar el pipeline completo en Windows sin Colab ni tunel de Cloudflare: los workers de research y render se ejecutan como procesos locales y los Spaces de HF remotos generan el guion y la voz.",
+    "ficheros": [
+      "apps/workers/worker_common.py - config, cliente de la API con leases, clientes de R2 y de los Spaces",
+      "apps/workers/viral_research.py - busqueda de videos virales con y sin YOUTUBE_API_KEY",
+      "apps/workers/local_research_worker.py - virales, guion (Space script-generator), voz (Space voice-studio) y subida del WAV a R2",
+      "apps/workers/remotion_project.py - genera el proyecto Remotion (MarketingShort, 1080x1920 a 30 fps)",
+      "apps/workers/local_render_worker.py - descarga de R2, npm install, npx remotion render, validacion del MP4 y subida a R2",
+      "apps/workers/requirements-workers.txt - dependencias de los workers"
+    ],
+    "comandos": {
+      "research": "python apps/workers/local_research_worker.py --once --topic \"<nicho>\" --create-job --verbose",
+      "render": "python apps/workers/local_render_worker.py --once --verbose",
+      "nota": "El worker de research crea el trabajo de render hijo al completarse; el de render lo toma de la cola."
+    },
+    "requisitos": [
+      "ffmpeg y ffprobe (winget install Gyan.FFmpeg). El worker los busca tambien en la carpeta de WinGet.",
+      "Node.js y npm (npm.cmd en PowerShell).",
+      "Chromium: lo descarga 'npx remotion browser ensure', aunque si hay un Chrome o Edge local el worker lo usa con --browser-executable.",
+      "HF_TOKEN con acceso a los dos Spaces privados."
+    ],
+    "diferencias_respetadas_por_el_diseno": [
+      "API_BASE_URL admite http:// en local (los notebooks de Colab exigen https porque salen a Internet).",
+      "No se usa --browser-executable=/usr/bin/chromium: es una ruta de Linux.",
+      "Las rutas /content de Linux se sustituyen por un temporal escribible.",
+      "El .env del repo se lee de la raiz; no se versiona ni se imprime."
+    ]
+  },
+  "notas_de_entorno": {
+    "ffmpeg": "Instalado con winget (Gyan.FFmpeg 9.0.2). winget anade el directorio bin al PATH del sistema, pero una terminal ya abierta no lo ve.",
+    "youtube": "El valor 447002834549-...apps.googleusercontent.com que aporto el usuario es un OAuth 2.0 client ID de Google, NO una API key: la Data API responde 'API key not valid. Please pass a valid API key.' Se guardo como YOUTUBE_CLIENT_ID, que es lo que necesita la publicacion en YouTube junto con YOUTUBE_CLIENT_SECRET y YOUTUBE_REFRESH_TOKEN. La busqueda de virales usa el extractor sin clave.",
+    "agentes": "AGENTS.md en la raiz recoge las instrucciones globales de trabajo: idioma, verificacion por ejecucion, trazabilidad, pruebas, git y reglas del entorno Windows.",
+    "traspaso": "docs/estado-sesion-actual.json resume la sesion para poder retomarla en otro chat sin releer el historico."
+  },
+  "auditoria_2026_11_09": {
+    "informe": "docs/auditoria-2026-11-09.md",
+    "resumen": "Auditoria del commit 8cc4d52 con verificacion por ejecucion en sandbox Linux: suite real, pyflakes, build de Next.js, smoke test del publisher, actionlint, resolver uv, y sondeo de la API y del publisher con TestClient y curl contra un scheduler Open-Dispatch simulado.",
+    "veredicto": "FAIL",
+    "hallazgos": {
+      "P0": 6,
+      "P1": 7,
+      "P2": 16,
+      "P3": 5,
+      "total": 34
+    },
+    "corregidos": 32,
+    "aplazados_por_decision_del_usuario": 2,
+    "aplazados": [
+      "AU-01: la puerta de aprobacion no exige autenticacion",
+      "AU-02: el publisher publica sin autenticacion y permite saltarse la puerta"
+    ],
+    "metodo": "Todo numero de este informe es medido, no estimado. Lo que no se pudo ejecutar (Docker) queda marcado como no verificado.",
+    "entorno": {
+      "sistema": "Linux, Python 3.11.2, Node 22.19.0, npm 10.9.3",
+      "docker": "no disponible: todo lo que exige 'docker compose config' queda sin verificar",
+      "nota": "El repositorio se desarrollo sobre Windows con PowerShell 5.1; las rutas y el estilo CRLF/LF se han respetado."
+    }
+  }
+}
