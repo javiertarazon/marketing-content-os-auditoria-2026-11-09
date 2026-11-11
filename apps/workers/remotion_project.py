@@ -13,7 +13,6 @@ un directorio temporal.
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -113,7 +112,6 @@ class RenderPlan:
     src_dir: Path
     props_path: Path
     props: dict[str, Any]
-    duration_in_frames: int
     fps: int = FPS
     width: int = WIDTH
     height: int = HEIGHT
@@ -146,13 +144,6 @@ class RenderPlan:
         ]
 
 
-def duration_in_frames(audio_duration_seconds: float, fps: int = FPS) -> int:
-    """Frames de la composicion segun la duracion de la narracion."""
-    if not math.isfinite(audio_duration_seconds) or audio_duration_seconds <= 0:
-        raise ValueError("La duracion de la narracion debe ser un numero positivo")
-    return max(30, math.ceil(audio_duration_seconds * fps))
-
-
 def write_remotion_project(project_dir: Path, props: dict[str, Any]) -> RenderPlan:
     """Escribe el proyecto Remotion en ``project_dir`` y devuelve el plan de render.
 
@@ -183,5 +174,4 @@ def write_remotion_project(project_dir: Path, props: dict[str, Any]) -> RenderPl
         src_dir=src,
         props_path=props_path,
         props=props,
-        duration_in_frames=duration_in_frames(float(props.get("audio_duration_seconds", 0))),
     )

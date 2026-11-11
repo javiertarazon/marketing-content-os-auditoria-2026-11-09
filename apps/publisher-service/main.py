@@ -25,7 +25,6 @@ Con Open-Dispatch la peticion lleva la lista de plataformas::
 Con Mixpost la peticion lleva el identificador de la cuenta (``integration_id``).
 """
 
-import os
 from datetime import datetime
 
 import httpx
@@ -34,19 +33,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 from adapters import mixpost_adapter, open_dispatch_adapter
-
-BACKENDS = ("open_dispatch", "mixpost")
+from publisher_settings import cors_origins, get_settings
 
 app = FastAPI(title="Marketing Content OS Publisher", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        origin.strip()
-        for origin in os.environ.get(
-            "CORS_ORIGINS", "http://localhost:3001"
-        ).split(",")
-        if origin.strip()
-    ],
+    allow_origins=cors_origins(),
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
 )
@@ -54,12 +46,7 @@ app.add_middleware(
 
 def backend() -> str:
     """Backend de publicacion configurado."""
-    selected = os.environ.get("PUBLISHER_BACKEND", "open_dispatch").strip().lower()
-    if selected not in BACKENDS:
-        raise RuntimeError(
-            f"PUBLISHER_BACKEND invalido: {selected!r}. Usa {', '.join(BACKENDS)}."
-        )
-    return selected
+    return get_settings().PUBLISHER_BACKEND
 
 
 def scheduler_error_detail(exc: httpx.HTTPStatusError) -> str:
@@ -183,6 +170,13 @@ async def publish(request: PublishRequest) -> dict:
 
         payload["platforms"] = _requested_platforms(request)
         return await open_dispatch_adapter.dispatch_content(payload)
+    except open_dispatch_adapter.VideoStageError as exc:
+        # La descarga del MP4 fallo: no es un problema del scheduler, asi que
+        # no se reporta como un fallo de conexion con el.
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

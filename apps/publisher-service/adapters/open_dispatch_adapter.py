@@ -215,6 +215,23 @@ def _media_filename(video_url: str) -> str:
     return f"{stem}-{digest}.mp4"
 
 
+class VideoStageError(RuntimeError):
+    """Fallo al descargar el MP4 al volumen compartido para YouTube.
+
+    Se distingue del fallo de conexion con el scheduler: si el error de
+    descarga se propaga tal cual (``httpx.RequestError``), el publisher lo
+    reporta como "no se pudo conectar con el scheduler", senalando al
+    servicio equivocado.
+    """
+
+    def __init__(self, video_url: str, cause: Exception) -> None:
+        self.video_url = video_url
+        self.cause = cause
+        super().__init__(
+            f"No se pudo descargar el video para YouTube desde {video_url}: {cause}"
+        )
+
+
 async def _stage_video(client: httpx.AsyncClient, video_url: str) -> str:
     """Descarga el MP4 al volumen compartido y devuelve su ruta RELATIVA.
 
@@ -393,7 +410,13 @@ async def dispatch_content(payload: dict) -> dict:
         if "youtube" in platforms:
             # YouTube sube desde disco: hace falta una copia local en el
             # volumen compartido con Open-Dispatch.
-            video_path = await _stage_video(client, video_url)
+            try:
+                video_path = await _stage_video(client, video_url)
+            except (httpx.HTTPStatusError, httpx.RequestError) as exc:
+                # El fallo es de la descarga del MP4, no del scheduler: se
+                # marca como propio para que el publisher no lo reporte como
+                # un problema de conexion con Open-Dispatch.
+                raise VideoStageError(video_url, exc) from exc
 
         formats = _build_formats(platforms, video_url, title, metadata, video_path)
         unit = {

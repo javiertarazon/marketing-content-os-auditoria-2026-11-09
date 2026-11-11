@@ -29,11 +29,13 @@ import logging
 import math
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
+from urllib.parse import urlparse
 
 import requests
 
@@ -46,10 +48,16 @@ if str(_REPO_ROOT) not in sys.path:
 
 from apps.workers.remotion_project import write_remotion_project  # noqa: E402
 from apps.workers.worker_common import (  # noqa: E402
+    EXIT_API_ERROR,
+    EXIT_CONFIG_ERROR,
+    EXIT_OK,
     ApiClient,
     LeaseRenewer,
+    WorkerAuthError,
+    WorkerUnavailableError,
     build_storage_client,
     configure_logging,
+    report_progress_safe,
     resolve_config,
     run_worker_loop,
 )
@@ -77,6 +85,9 @@ ASSET_SUFFIXES = {
     "image/webp": ".webp",
     "video/mp4": ".mp4",
 }
+# Hosts locales: se permiten en http plano porque la API y el storage local
+# se sirven sin TLS.
+LOCAL_AUDIO_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
 def find_media_tool(name: str) -> str | None:
@@ -123,22 +134,67 @@ def resolve_node_tool(name: str) -> str:
     )
 
 
+def _process_group_options() -> dict[str, Any]:
+    """Opciones de ``subprocess`` para que el comando tenga su propio grupo.
+
+    En POSIX el hijo pasa a ser lider de sesion (grupo de procesos propio) y en
+    Windows se crea un grupo de procesos nuevo. Asi, al matar el grupo, mueren
+    tambien los nietos (node, Chrome) que el comando dejo abiertos.
+    """
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {"start_new_session": True}
+
+
+def _kill_process_group(process: "subprocess.Popen[Any]") -> None:
+    """Mata el grupo de procesos completo, nietos incluidos."""
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+            check=False,
+            capture_output=True,
+        )
+        return
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        process.kill()
+
+
 def run_command(command: list[str], cwd: Path, timeout: int = 3600) -> str:
-    """Ejecuta un comando externo y devuelve su salida (ultimas lineas)."""
+    """Ejecuta un comando externo y devuelve su salida (ultimas lineas).
+
+    El comando se lanza en su propio grupo de procesos. Si se agota el tiempo se
+    mata el grupo entero (no solo al proceso directo), que es lo que dejaba
+    bloqueados los temporales en Windows, y se levanta un ``RuntimeError`` como
+    en un fallo del comando: asi el fallback de navegador tambien se activa
+    cuando el comando se queda colgado.
+    """
     logger.info("Ejecutando: %s", " ".join(command))
-    completed = subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=str(cwd),
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
-        timeout=timeout,
-        check=False,
+        **_process_group_options(),
     )
-    output = (completed.stdout or "") + (completed.stderr or "")
-    if completed.returncode != 0:
+    try:
+        output, _ = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        _kill_process_group(process)
+        try:
+            output, _ = process.communicate(timeout=30)
+        except Exception:  # noqa: BLE001 - el proceso ya esta muerto
+            output = ""
+        raise RuntimeError(
+            f"El comando '{command[0]}' supero el limite de {timeout} s y se detuvo."
+        ) from error
+    output = output or ""
+    if process.returncode != 0:
         raise RuntimeError(
             f"El comando '{command[0]} {command[1] if len(command) > 1 else ''}' termino con "
-            f"codigo {completed.returncode}: {output.strip()[-1200:]}"
+            f"codigo {process.returncode}: {output.strip()[-1200:]}"
         )
     return output.strip()[-2000:]
 
@@ -199,6 +255,60 @@ def resolve_visual_asset(request: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
+def audio_allowed_hosts() -> set[str]:
+    """Hosts desde los que el worker puede descargar audio.
+
+    Se configuran con ``STORAGE_PUBLIC_BASE_URL`` (host publico del bucket de
+    medios) o con ``R2_PUBLIC_HOSTS`` (lista de hosts separados por comas).
+    """
+    hosts: set[str] = set()
+    base_url = (os.environ.get("STORAGE_PUBLIC_BASE_URL") or "").strip()
+    if base_url:
+        host = (urlparse(base_url).hostname or "").lower()
+        if host:
+            hosts.add(host)
+    for item in (os.environ.get("R2_PUBLIC_HOSTS") or "").split(","):
+        host = item.strip().lower()
+        if host:
+            hosts.add(host)
+    return hosts
+
+
+def validate_audio_url(url: str, allowed_hosts: Iterable[str] | None = None) -> str:
+    """Valida la URL de audio antes de descargarla (defensa anti-SSRF).
+
+    Solo se admiten ``http`` y ``https``; fuera de los hosts locales el esquema
+    tiene que ser ``https`` y el host debe estar en la allowlist. Si la URL no
+    cumple las reglas se lanza ``ValueError`` con un mensaje claro.
+    """
+    candidate = str(url or "").strip()
+    parsed = urlparse(candidate)
+    scheme = (parsed.scheme or "").lower()
+    if scheme not in ("http", "https"):
+        raise ValueError(
+            "URL de audio no permitida: solo se admiten http y https "
+            f"(esquema recibido: {scheme or 'ninguno'})."
+        )
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise ValueError("URL de audio no permitida: no tiene host.")
+    if host in LOCAL_AUDIO_HOSTS:
+        return candidate
+    if scheme != "https":
+        raise ValueError(f"URL de audio no permitida: {host} tiene que usar https.")
+    allowed = {
+        str(item).strip().lower()
+        for item in (audio_allowed_hosts() if allowed_hosts is None else allowed_hosts)
+        if str(item).strip()
+    }
+    if host not in allowed:
+        raise ValueError(
+            f"URL de audio no permitida: el host {host} no esta en la allowlist "
+            "(STORAGE_PUBLIC_BASE_URL o R2_PUBLIC_HOSTS)."
+        )
+    return candidate
+
+
 def download_audio(
     request: dict[str, Any], destination: Path, storage: Any, bucket: str
 ) -> None:
@@ -209,6 +319,7 @@ def download_audio(
         return
     audio_url = request.get("audio_url")
     if audio_url:
+        validate_audio_url(audio_url)
         response = requests.get(audio_url, timeout=120)
         response.raise_for_status()
         destination.write_bytes(response.content)
@@ -264,7 +375,6 @@ def process_render_job(
     client: ApiClient,
     job: dict[str, Any],
     work_dir: Path,
-    keep_project: bool = False,
 ) -> bool:
     """Procesa un trabajo de render de principio a fin."""
     job_id = str(job["job_id"])
@@ -292,8 +402,13 @@ def process_render_job(
 
         config = client.config
         storage = build_storage_client(config)
-        client.report_progress(
-            job_id, lease_token, "media_download", "Descargando audio y medios privados de R2", 15
+        report_progress_safe(
+            client,
+            job_id,
+            lease_token,
+            "media_download",
+            "Descargando audio y medios privados de R2",
+            15,
         )
 
         with tempfile.TemporaryDirectory(prefix="marketing-render-") as job_tmp:
@@ -302,8 +417,13 @@ def process_render_job(
             download_audio(request, audio_path, storage, config.s3_bucket)
             narration_duration = audio_duration(ffprobe, audio_path)
 
-            client.report_progress(
-                job_id, lease_token, "media_ready", "Medios listos; preparando edicion", 35
+            report_progress_safe(
+                client,
+                job_id,
+                lease_token,
+                "media_ready",
+                "Medios listos; preparando edicion",
+                35,
             )
             public_dir = work_dir / "public"
             public_dir.mkdir(parents=True, exist_ok=True)
@@ -320,8 +440,13 @@ def process_render_job(
 
             npm = resolve_node_tool("npm")
             npx = resolve_node_tool("npx")
-            client.report_progress(
-                job_id, lease_token, "dependencies", "Instalando dependencias de Remotion", 45
+            report_progress_safe(
+                client,
+                job_id,
+                lease_token,
+                "dependencies",
+                "Instalando dependencias de Remotion",
+                45,
             )
             if not (work_dir / "node_modules").is_dir():
                 run_command([npm, "install", "--no-audit", "--no-fund"], cwd=work_dir, timeout=1800)
@@ -337,8 +462,13 @@ def process_render_job(
                 logger.warning("No se pudo preparar el navegador de Remotion: %s", error)
 
             renewer.ensure_active()
-            client.report_progress(
-                job_id, lease_token, "rendering", "Editando y renderizando el video", 50
+            report_progress_safe(
+                client,
+                job_id,
+                lease_token,
+                "rendering",
+                "Editando y renderizando el video",
+                50,
             )
             video_path = job_tmp_dir / f"{job_id}.mp4"
             command = plan.render_command(video_path, npx=npx)
@@ -350,13 +480,23 @@ def process_render_job(
             if not video_path.is_file() or video_path.stat().st_size == 0:
                 raise RuntimeError("Remotion no produjo un MP4 valido")
 
-            client.report_progress(
-                job_id, lease_token, "video_validation", "Validando el MP4 final", 80
+            report_progress_safe(
+                client,
+                job_id,
+                lease_token,
+                "video_validation",
+                "Validando el MP4 final",
+                80,
             )
             validate_video(video_path, ffprobe, narration_duration)
 
-            client.report_progress(
-                job_id, lease_token, "video_storage", "Subiendo video terminado a R2 privado", 85
+            report_progress_safe(
+                client,
+                job_id,
+                lease_token,
+                "video_storage",
+                "Subiendo video terminado a R2 privado",
+                85,
             )
             renewer.ensure_active()
             video_key = f"renders/{job_id}.mp4"
@@ -381,8 +521,6 @@ def process_render_job(
         return False
     finally:
         renewer.stop()
-        if keep_project:
-            logger.info("El proyecto de Remotion se conserva en %s", work_dir)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -438,15 +576,22 @@ def main(argv: list[str] | None = None) -> int:
             )
         return process_render_job(client, job, work_dir)
 
-    processed = run_worker_loop(
-        client,
-        process,
-        once=args.once,
-        max_jobs=args.max_jobs,
-        wait_seconds=args.wait_seconds,
-    )
+    try:
+        processed = run_worker_loop(
+            client,
+            process,
+            once=args.once,
+            max_jobs=args.max_jobs,
+            wait_seconds=args.wait_seconds,
+        )
+    except WorkerAuthError as error:
+        logger.error("El worker de render se detiene: %s", error)
+        return EXIT_CONFIG_ERROR
+    except WorkerUnavailableError as error:
+        logger.error("El worker de render se detiene: %s", error)
+        return EXIT_API_ERROR
     logger.info("Trabajos procesados: %s", processed)
-    return 0
+    return EXIT_OK
 
 
 if __name__ == "__main__":
