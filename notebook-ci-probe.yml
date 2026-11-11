@@ -1,0 +1,152 @@
+name: Notebook CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Permite relanzar la CI a mano desde la pestana Actions, sin
+  # necesidad de un commit de prueba.
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # NO se declara un servicio "docker:24.0-dind": el runner hospedado de
+    # GitHub ya trae el daemon de Docker instalado y en marcha, y es ese daemon
+    # nativo el que publica los puertos del compose en el 127.0.0.1 del runner.
+    # Con dind, "docker compose up" publicaba 8000/9000/5432 en el espacio de
+    # nombres del contenedor dind (no en el del runner), de modo que el
+    # healthcheck, API_BASE_URL y S3_ENDPOINT_URL no alcanzaban el stack; ademas
+    # el servicio exponia la API de Docker sin TLS en el puerto 2375.
+    # Si algun dia hace falta dind, la alternativa es
+    # "options: --tls=false --privileged --network host" SIN bloque "ports:"
+    # (con red host no se pueden publicar puertos) y DOCKER_HOST=tcp://localhost:2375.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate workflow files with actionlint
+        # Sin esto, un workflow invalido (por ejemplo una clave no permitida
+        # en 'services') solo se descubre en GitHub, que lo rechaza antes de
+        # crear ningun job.
+        # Este paso va DESPUES del checkout: actionlint lee los ficheros del
+        # repositorio, asi que sin el clone el glob no expande y el paso
+        # termina con 'could not read ".github/workflows/*.yml"' (exit 3).
+        run: |
+          curl -fsSL -o actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          tar xzf actionlint.tar.gz actionlint
+          ./actionlint .github/workflows/*.yml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+          uv venv --python 3.11 .venv
+          source .venv/bin/activate
+          # Primero el lockfile de la API (versiones exactas + hashes, el mismo
+          # que instala la imagen de produccion) y despues las dependencias de
+          # desarrollo y las del adaptador, que no forman parte del lock. El
+          # segundo paso no cambia las versiones ya instaladas: uv no actualiza
+          # un paquete ya presente que cumple el rango.
+          uv pip install --require-hashes -r apps/api/requirements.lock.txt
+          # Los requisitos de los workers se instalan tambien: los tests de
+          # apps/workers/ los importan y 'requests' ya no llega de forma
+          # transitiva (gradio_client 2.x usa httpx).
+          uv pip install -r apps/api/requirements-dev.txt \
+            -r packages/python/adapters/requirements.txt \
+            -r apps/workers/requirements-workers.txt
+          npm ci --prefix apps/dashboard
+
+      - name: Run pytest suite
+        run: |
+          source .venv/bin/activate
+          pytest -q
+
+      - name: Smoke test the publisher against a simulated Open-Dispatch
+        # No necesita Docker, red ni credenciales: el script levanta un
+        # Open-Dispatch simulado y el publisher con uvicorn, y comprueba el
+        # contrato de dispatch, la autenticacion y las guardas de la URL.
+        run: |
+          source .venv/bin/activate
+          python scripts/smoke_publisher.py
+
+      - name: Typecheck and build dashboard
+        run: |
+          npm run --prefix apps/dashboard build
+
+      - name: Validate notebooks compile
+        # Los workers no se pueden ejecutar fuera de Colab: requieren los
+        # Secrets de Colab, un API_BASE_URL publico por HTTPS y los Spaces
+        # privados de Hugging Face. Aqui solo se comprueba que el codigo de
+        # las celdas es Python valido.
+        run: |
+          source .venv/bin/activate
+          python - <<'PY'
+          import json, pathlib, sys
+          failures = []
+          for nb in sorted(pathlib.Path("notebooks").glob("*.ipynb")):
+              data = json.loads(nb.read_text(encoding="utf-8"))
+              source = "\n".join(
+                  "".join(c.get("source", []))
+                  for c in data["cells"] if c.get("cell_type") == "code"
+              )
+              cleaned = "\n".join(
+                  line for line in source.splitlines()
+                  if not line.strip().startswith(("%", "!"))
+              ).replace("await ", "")
+              try:
+                  compile(cleaned, nb.name, "exec")
+              except SyntaxError as exc:
+                  failures.append(f"{nb.name}:{exc.lineno}: {exc.msg}")
+              print(f"{nb.name}: ok")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          PY
+
+      - name: Start Docker Compose services
+        run: |
+          cp .env.example .env || true
+          docker compose -f docker-compose.dev.yml up -d
+
+      - name: Wait for API health
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/healthz > /dev/null; then
+              echo "API healthy"
+              exit 0
+            fi
+            echo "Waiting for API..." && sleep 5
+          done
+          echo "API never became healthy"
+          docker compose -f docker-compose.dev.yml logs api
+          exit 1
+
+      - name: Smoke test the API and worker protocol
+        run: |
+          source .venv/bin/activate
+          python scripts/smoke_local_pipeline.py
+        env:
+          WORKER_API_TOKEN: ci-worker-token
+          API_BASE_URL: http://localhost:8000
+          # MinIO del stack de dev, alcanzado por el puerto publicado en el host.
+          S3_ENDPOINT_URL: http://127.0.0.1:9000
+          S3_BUCKET: content-media
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin
+          POSTGRES_USER: content
+          POSTGRES_PASSWORD: change-this-local-password
+          POSTGRES_DB: content
