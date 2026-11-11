@@ -16,7 +16,7 @@ RUN groupadd -g 999 dispatch 2>/dev/null || true \
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY main.py .
+COPY main.py publisher_settings.py .
 COPY adapters /app/adapters
 
 # El usuario no puede escribir en /app: se evita intentar generar .pyc.
