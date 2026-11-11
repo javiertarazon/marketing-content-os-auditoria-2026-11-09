@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import secrets
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -121,6 +122,21 @@ def get_storage_client():
     )
 
 
+def format_bytes(size: int) -> str:
+    """Tamano en unidades legibles (B, KB, MB, GB)."""
+    value = float(size)
+    unit = "B"
+    for unit in ("B", "KB", "MB", "GB"):
+        if value < 1024 or unit == "GB":
+            break
+        value /= 1024
+    if unit == "B":
+        return f"{int(value)} B"
+    if value.is_integer():
+        return f"{value:.0f} {unit}"
+    return f"{value:.1f} {unit}"
+
+
 def has_valid_media_header(asset_type: AssetType, extension: str, header: bytes) -> bool:
     if asset_type is AssetType.voice:
         return header.startswith(b"RIFF") and header[8:12] == b"WAVE"
@@ -133,6 +149,94 @@ def has_valid_media_header(asset_type: AssetType, extension: str, header: bytes)
     if extension == ".webp":
         return header.startswith(b"RIFF") and header[8:12] == b"WEBP"
     return False
+
+
+# Valores permitidos por la CHECK de estado de un trabajo. La puerta de
+# aprobacion humana anadio tres estados a los cuatro originales.
+JOB_STATUS_VALUES: tuple[str, ...] = (
+    "queued",
+    "running",
+    "succeeded",
+    "failed",
+    "awaiting_approval",
+    "approved",
+    "rejected",
+)
+
+# Nombre de la CHECK de estado en la tabla jobs.
+JOB_STATUS_CHECK = "jobs_status_check"
+
+
+def _constraint_definition(connection, name: str) -> str | None:
+    """Definicion de una CHECK de la tabla jobs, o None si no existe."""
+    row = connection.execute(
+        """
+        SELECT pg_get_constraintdef(c.oid) AS definition
+        FROM pg_constraint c
+        JOIN pg_class t ON t.oid = c.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE c.conname = %s
+          AND c.contype = 'c'
+          AND t.relname = 'jobs'
+          AND n.nspname = current_schema()
+        """,
+        (name,),
+    ).fetchone()
+    if row is None:
+        return None
+    return row["definition"]
+
+
+def _allowed_status_values(definition: str) -> set[str]:
+    """Valores que permite una definicion de CHECK de status.
+
+    Postgres normaliza la CHECK a ``status = ANY (ARRAY['a'::text, ...])``,
+    asi que se extraen los literales de esa lista.
+    """
+    array = re.search(r"ARRAY\[(.*?)\]", definition, re.DOTALL)
+    haystack = array.group(1) if array else definition
+    return set(re.findall(r"'([^']*)'", haystack))
+
+
+def ensure_job_status_constraint(connection) -> bool:
+    """Deja la CHECK de estado de `jobs` como se espera, sin reescribir la tabla.
+
+    Recrear una CHECK obliga a Postgres a validar la tabla completa y toma un
+    lock ACCESS EXCLUSIVE: hacerlo en cada arranque reescribia la tabla `jobs`
+    y bloqueaba las escrituras. Por eso se compara primero la definicion
+    existente en `pg_constraint` y solo se hace DROP+ADD cuando no coincide
+    con la esperada.
+
+    Devuelve True si la constraint se ha recreado.
+    """
+    definition = _constraint_definition(connection, JOB_STATUS_CHECK)
+    if (
+        definition is not None
+        and _allowed_status_values(definition) == set(JOB_STATUS_VALUES)
+    ):
+        return False
+    connection.execute(f"ALTER TABLE jobs DROP CONSTRAINT IF EXISTS {JOB_STATUS_CHECK}")
+    allowed = ", ".join(f"'{value}'" for value in JOB_STATUS_VALUES)
+    connection.execute(
+        f"ALTER TABLE jobs ADD CONSTRAINT {JOB_STATUS_CHECK} "
+        f"CHECK (status IN ({allowed}))"
+    )
+    return True
+
+
+def _column_exists(connection, table: str, column: str) -> bool:
+    """Indica si una columna existe en el esquema actual."""
+    row = connection.execute(
+        """
+        SELECT 1 AS present
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = %s
+          AND column_name = %s
+        """,
+        (table, column),
+    ).fetchone()
+    return row is not None
 
 
 def init_database() -> None:
@@ -172,40 +276,38 @@ def init_database() -> None:
             "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS lease_expires_at TIMESTAMPTZ"
         )
         # La puerta de aprobacion humana introduce tres estados nuevos. La
-        # restricion CHECK original limitaba status a cuatro valores, asi que hay
-        # que recrearla: un DROP IF EXISTS evita fallar si no existe todavia.
-        connection.execute("ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_status_check")
-        connection.execute(
-            """
-            ALTER TABLE jobs ADD CONSTRAINT jobs_status_check
-            CHECK (status IN (
-                'queued', 'running', 'succeeded', 'failed',
-                'awaiting_approval', 'approved', 'rejected'
-            ))
-            """
-        )
+        # migracion solo rehace la CHECK cuando su definicion no es la
+        # esperada: recrearla en cada arranque reescribia la tabla `jobs`
+        # entera y bloquearia las escrituras.
+        ensure_job_status_constraint(connection)
+        # `progress` es una migracion de datos: solo tiene sentido la primera
+        # vez que se anade la columna. Si ya existe, recorrer la tabla en
+        # cada arranque no aporta nada.
+        progress_added = not _column_exists(connection, "jobs", "progress")
         connection.execute(
             "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS progress JSONB"
         )
         connection.execute(
             "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS parent_job_id UUID REFERENCES jobs(job_id)"
         )
-        connection.execute(
-            """
-            UPDATE jobs
-            SET progress = jsonb_build_object(
-                'stage', status,
-                'message', CASE status
-                    WHEN 'queued' THEN 'En cola'
-                    WHEN 'running' THEN 'En proceso'
-                    WHEN 'succeeded' THEN 'Completado'
-                    ELSE 'Fallido'
-                END,
-                'percent', CASE WHEN status = 'succeeded' THEN 100 ELSE 0 END
+        if progress_added:
+            connection.execute(
+                """
+                UPDATE jobs
+                SET progress = jsonb_build_object(
+                    'stage', status,
+                    'message', CASE status
+                        WHEN 'queued' THEN 'En cola'
+                        WHEN 'running' THEN 'En proceso'
+                        WHEN 'succeeded' THEN 'Completado'
+                        ELSE 'Fallido'
+                    END,
+                    'percent', CASE WHEN status = 'succeeded' THEN 100 ELSE 0 END
+                )
+                WHERE progress IS NULL
+                """
             )
-            WHERE progress IS NULL
-            """
-        )
+        # Un job que quedo 'running' por una caida recupera aqui su lease.
         connection.execute(
             """
             UPDATE jobs
@@ -456,7 +558,7 @@ def upload_asset(
     if size_bytes == 0:
         raise HTTPException(status_code=400, detail="El archivo está vacío")
     if size_bytes > MAX_ASSET_BYTES:
-        raise HTTPException(status_code=413, detail="El archivo supera el máximo de 250 MB")
+        raise HTTPException(status_code=413, detail=f"El archivo supera el máximo de {format_bytes(MAX_ASSET_BYTES)}")
     header = file.file.read(16)
     file.file.seek(0)
     if not has_valid_media_header(asset_type, extension, header):

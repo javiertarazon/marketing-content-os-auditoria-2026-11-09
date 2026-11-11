@@ -12,6 +12,8 @@ up:
 
 # Generate TypeScript client types from the FastAPI OpenAPI spec
 generate-types:
+	@echo "⚙️ Waiting for the API to be healthy..."
+	@bash scripts/wait_for_api.sh
 	@echo "⚙️ Generating TypeScript types..."
 	bash scripts/generate_api_types.sh
 

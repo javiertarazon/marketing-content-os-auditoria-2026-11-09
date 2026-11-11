@@ -1,3 +1,7 @@
 -r requirements.txt
 pytest>=8,<9
-gradio_client>=1.4,<2
+# gradio_client NO es una dependencia de la API: nada de apps/api lo importa.
+# Solo lo usan packages/python/adapters (fijado a gradio_client>=2,<3) y
+# scripts/smoke_hf_spaces_cpu.py. Anclarlo aqui a >=1.4,<2 hacia irresoluble
+# la instalacion conjunta con el adaptador (uv: "No solution found when
+# resolving dependencies").
