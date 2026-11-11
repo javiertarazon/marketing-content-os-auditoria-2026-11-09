@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.1.0",
-  "generado_en": "2026-11-05T22:56:23+00:00",
-  "generado_por": "Auditoria tecnica + reescritura del publisher sobre Open-Dispatch (MCode)",
+  "schema_version": "2.2.0",
+  "generado_en": "2026-11-09T18:40:00+00:00",
+  "generado_por": "Auditoria tecnica del 9-nov-2026 con verificacion por ejecucion (Mavis) y correccion de los hallazgos aplicables",
   "proposito": "Manifiesto de trazabilidad para agentes: de donde viene el proyecto, que cambios se aplicaron, en que nivel esta cada componente y que falta para que funcione al 100%.",
   "project": {
     "name": "Marketing Content OS",
@@ -116,13 +116,13 @@
   "current_state": {
     "apps/api": {
       "nivel": "funcional",
-      "estado": "La API importa, valida su configuracion, expone 18 rutas y su suite completa pasa.",
-      "verificado": "import main OK; 31/31 tests; 8 de 14 rutas siguen SIN autenticacion (decision D1)."
+      "estado": "La API importa, valida su configuracion, expone 16 rutas y su suite completa pasa. La migracion de la tabla jobs ya no reescribe la tabla en cada arranque.",
+      "verificado": "import main OK; 131/131 tests; 16 rutas medidas con TestClient (6 con token, 10 sin); la migracion de la CHECK es idempotente."
     },
     "apps/publisher-service": {
       "nivel": "funcional_condicionado",
-      "estado": "Publica contra Open-Dispatch (MIT). El contrato esta verificado contra el codigo upstream y el flujo completo funciona por HTTP, pero la publicacion REAL depende de las credenciales OAuth de TikTok, Instagram y YouTube, que siguen vacias en el .env (las aprobaciones de Meta y TikTok tardan dias o semanas; YouTube es inmediato).",
-      "verificado": "16 tests propios (tests/test_open_dispatch_adapter.py) y scripts/smoke_publisher.py, que levanta un Open-Dispatch simulado y comprueba dispatch, autenticacion, guardas y /v1/integrations."
+      "estado": "Publica contra Open-Dispatch (MIT). La configuracion se valida con pydantic-settings (publisher_settings.py) y el fallo de descarga del MP4 ya no se reporta como un problema de conexion con el scheduler. La publicacion REAL sigueDepending de las credenciales OAuth de TikTok, Instagram y YouTube, que siguen vacias en el .env.",
+      "verificado": "tests/test_publisher_settings.py; scripts/smoke_publisher.py devuelve SMOKE OK; dispatch encolado contra un scheduler simulado."
     },
     "apps/dashboard": {
       "nivel": "funcional",
@@ -136,18 +136,28 @@
     },
     "infra/docker": {
       "nivel": "funcional",
-      "estado": "Los dos compose validan. El de dev levanta Postgres, MinIO, API y dashboard; el de infra anade el publisher y, segun el perfil, Open-Dispatch ('dispatch') o Mixpost ('scheduler'), mas el tunel de Colab. Publisher y Open-Dispatch comparten el volumen de medios 'open_dispatch_media'.",
-      "verificado": "docker compose config OK con los perfiles publisher, dispatch, scheduler y colab-tunnel."
+      "estado": "Los dos compose parsean. El de dev ya no usa las imagenes de MinIO retiradas de Docker Hub, los defaults de postgres coinciden con los de la API, los servicios declaran restart y healthchecks, y las redes estan segmentadas en edge y db.",
+      "verificado": "YAML parseado y topologia comprobada servicio por servicio. NO VERIFICADO con 'docker compose config': el entorno de auditoria no tiene Docker."
     },
     "ci": {
       "nivel": "funcional",
-      "estado": "YAML valido con pasos reales: pytest, build del dashboard, validacion de notebooks, espera de health y smoke test.",
-      "verificado": "YAML parseado; pasos coherentes con el repositorio."
+      "estado": "El workflow es valido y sus tres bloqueadores estan corregidos (orden del checkout, conflicto de dependencias y acceso al stack). Sigue sin poder ejecutarse en GitHub hasta que se regularice la facturacion de la cuenta, que es externa al repositorio.",
+      "verificado": "actionlint v1.7.12 exit 0; uv resuelve la instalacion completa (exit 0 en los dos pasos); las 131 pruebas pasan con las versiones bloqueadas."
     },
     "spaces": {
       "nivel": "parcial",
       "estado": "Los cuatro Spaces (script-generator, voice-studio, hyperframes, open-gen-ai) implementan el protocolo del API, pero el parseo del nombre de modelo en script-generator es fragil y hyperframes/open-gen-ai no estan conectados al pipeline.",
       "verificado": "Analisis por lectura cruzada con el contrato del API."
+    },
+    "apps/workers": {
+      "nivel": "funcional",
+      "estado": "Workers locales de research y render con el lease tolerante a fallos transitorios, la investigacion reparada (fechas relativas y numero de vistas en formato espanol), el prompt saneado contra inyeccion y la validacion anti-SSRF de la URL de audio. Ahora tienen cobertura de tests.",
+      "verificado": "68 tests nuevos en tests/test_workers_*.py; suite completa en 131 tests."
+    },
+    "dashboard": {
+      "nivel": "funcional",
+      "estado": "Los tipos se derivan del contrato OpenAPI generado: si la API cambia un campo, el build falla en vez de que el dashboard se quede desincronizado en silencio.",
+      "verificado": "next build exit 0. La proteccion se comprobó alterando el contrato a proposito: 8 errores TS2339 y build exit 1."
     }
   },
   "changes": [
@@ -696,6 +706,474 @@
       "fix": "scripts/smoke_publisher.py comprueba la autenticacion Bearer, la forma de la ContentUnit, el rechazo 422 de una URL ajena al almacenamiento SIN generar trafico, el rechazo de plataforma no soportada y GET /v1/integrations.",
       "status": "aplicado",
       "verification": "SMOKE OK: publisher <-> Open-Dispatch. La suite completa queda en 48 tests (17 propios del adaptador y del publisher)."
+    },
+    {
+      "id": "AU-01",
+      "severidad": "P0",
+      "area": "seguridad",
+      "titulo": "La puerta de aprobacion humana no exige autenticacion",
+      "file": "apps/api/main.py",
+      "lines": "872 (approve_job), 949 (reject_job)",
+      "problema": "Las dos rutas que disparan la publicacion no tienen Depends(require_worker_token). Medido con TestClient: POST /v1/jobs/{id}/approve sin cabecera Authorization NO devuelve 401, sino que ejecuta la aprobacion y llama al publisher. El manifiesto declaraba '8 de 14 rutas publicas'; la medicion real da 10 de 16.",
+      "fix": "NO CORREGIDO: el usuario decidio el 9-nov-2026 aplazar la autenticacion de la publicacion hasta que todo lo demas este resuelto. Queda como la decision D1.",
+      "status": "pendiente_decision",
+      "verificacion": "Medido por ejecucion: TestClient sin Authorization -> 10 de 16 rutas abiertas (la API expone 16 rutas, 6 con token)."
+    },
+    {
+      "id": "AU-02",
+      "severidad": "P0",
+      "area": "seguridad",
+      "titulo": "El publisher publica sin autenticacion y permite saltarse la puerta de aprobacion",
+      "file": "apps/publisher-service/main.py",
+      "lines": "169 (publish)",
+      "problema": "POST /v1/publish no tiene dependencias de seguridad y la API lo llama sin cabecera Authorization (apps/api/main.py:850). Probado end-to-end con un scheduler Open-Dispatch simulado: un POST sin ninguna credencial encolo la publicacion para tiktok e instagram (HTTP 200) con la ContentUnit completa. La puerta de aprobacion es un formality check: se puede saltar golpeando el publisher.",
+      "fix": "NO CORREGIDO por decision del usuario (ver AU-01). El resto del hardening del publisher si se aplico: configuracion validada (AU-12) y diagnostico real del fallo de descarga (AU-15).",
+      "status": "pendiente_decision",
+      "verificacion": "Probado por ejecucion: dispatch encolado en el scheduler simulado sin credencial."
+    },
+    {
+      "id": "AU-03",
+      "severidad": "P0",
+      "area": "apps/workers",
+      "titulo": "timedelta(months=) no existe: la etapa de investigacion reventaba con cualquier video de hace mas de un mes",
+      "file": "apps/workers/viral_research.py",
+      "lines": "142, 156",
+      "problema": "El mapa de unidades traducía 'mes' a 'months' y la linea 156 hacia timedelta(months=...): TypeError 'months' is an invalid keyword argument. El error escapaba fuera del try que solo cubria la red, asi que el job de investigacion se marcaba fallido. Con Accept-Language es-ES (el camino por defecto) cualquier resultado 'hace N meses' tumba la etapa.",
+      "fix": "Se reescribio _parse_relative_time con una tabla de patrones explicitos (espanol e ingles) y los meses se aproximan con timedelta(days=30*amount), igual que los anos con 365.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: 8 parametrizaciones de fechas relativas. Reproduccion previa del TypeError confirmada."
+    },
+    {
+      "id": "AU-04",
+      "severidad": "P0",
+      "area": "apps/workers",
+      "titulo": "Un solo fallo transitorio de heartbeat declaraba el lease perdido y tiraba hasta 30 minutos de trabajo",
+      "file": "apps/workers/worker_common.py",
+      "lines": "LeaseRenewer (antes 302-307)",
+      "problema": "El hilo de renovacion hacia 'except requests.RequestException: self._lost.set(); return' sin reintento. Con JOB_LEASE_SECONDS=300 y renovacion cada 60 s, la API habria aceptado varias renovaciones mas, pero el worker se rendia: ensure_active() lanzaba, el job se marcaba fallido y se perdian la investigacion, el guion y la voz ya sintetizados, dejando el WAV huerfano en R2.",
+      "fix": "LeaseRenewer.renew_once() distingue el 409 (la API ya no reconoce la reserva: lease perdido de inmediato) del fallo transitorio, que se tolera hasta LEASE_MAX_CONSECUTIVE_FAILURES (3) intentos seguidos con espera creciente. Ellease solo se pierde al agotarlos.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_lease.py: un fallo transitorio NO pierde el lease; tres seguidos SI; un 409 lo pierde de inmediato."
+    },
+    {
+      "id": "AU-05",
+      "severidad": "P0",
+      "area": "ci",
+      "titulo": "El paso de actionlint se ejecutaba antes del checkout: el job moria en el primer paso",
+      "file": ".github/workflows/notebook-ci.yml",
+      "lines": "28-36 (se movieron despues de la linea 38)",
+      "problema": "El paso 'Validate workflow files with actionlint' estaba antes de 'actions/checkout@v4'. Sin el repositorio en disco el glob no expande y actionlint recibe la ruta literal: 'could not read \".github/workflows/*.yml\"', exit 3. El job moria en el paso 1 y ningun check posterior llegaba a ejecutarse. El README afirmaba que la CI ejecutaba actionlint, cosa imposible.",
+      "fix": "El checkout se movio al principio y el paso de actionlint quedo despues. Ademas se elimino el servicio dind (ver AU-07).",
+      "status": "aplicado y verificado",
+      "verificacion": "actionlint v1.7.12 sobre el workflow real -> exit 0. Reproduccion previa del exit 3 sobre la ruta inexistente."
+    },
+    {
+      "id": "AU-06",
+      "severidad": "P0",
+      "area": "ci",
+      "titulo": "Conflictos de dependencias: el paso 'Install dependencies' no podia resolverse",
+      "file": "apps/api/requirements-dev.txt, packages/python/adapters/requirements.txt, apps/workers/requirements-workers.txt",
+      "lines": "todo el fichero",
+      "problema": "requirements-dev.txt fijaba gradio_client>=1.4,<2 y packages/python/adapters/requirements.txt fijaba gradio_client>=2,<3: la instalacion conjunta era irresoluble. uv: 'Because you require gradio-client>=1.4,<2 and gradio-client>=2,<3, we can conclude that your requirements are unsatisfiable' (exit 1). Ademas workers/requirements-workers.txt pedia gradio_client>=1.0 sin techo.",
+      "fix": "Se elimina el pin de gradio_client de requirements-dev.txt (nada en apps/api lo importa: solo lo usan packages/python/adapters y scripts/smoke_hf_spaces_cpu.py) y se alinea workers/requirements-workers.txt a >=2,<3. La CI instala ademas los requisitos de los workers.",
+      "status": "aplicado y verificado",
+      "verificacion": "uv pip install --dry-run con los dos ficheros -> exit 0. Con la secuencia completa de la CI -> exit 0 en los dos pasos."
+    },
+    {
+      "id": "AU-07",
+      "severidad": "P1",
+      "area": "ci",
+      "titulo": "El stack de compose no era alcanzable desde el runner: el servicio dind publicaba los puertos en su propio namespace",
+      "file": ".github/workflows/notebook-ci.yml",
+      "lines": "16-24 (servicio docker eliminado)",
+      "problema": "El servicio docker:24.0-dind se declaraba con 'ports: - 2375:2375' pero sin --network host: los puertos que publica 'docker compose up' quedan en el netns del contenedor dind, no en el 127.0.0.1 del runner. Afectaba al healthcheck, a API_BASE_URL, a S3_ENDPOINT_URL y al Postgres. Ademas 2375:2375 publicaba la API de Docker sin TLS.",
+      "fix": "Se elimina el servicio dind: el runner hospedado de GitHub ya trae el daemon de Docker instalado, y es ese daemon nativo el que publica los puertos en el localhost del runner. Se deja un comentario con la alternativa si algun dia hace falta dind.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y unico servicio docker消失了 del workflow. El alcance real (que los puertos se publiquen en el runner) se confirmara en el primer run con la facturacion resuelta."
+    },
+    {
+      "id": "AU-08",
+      "severidad": "P1",
+      "area": "infra/docker",
+      "titulo": "MinIO borro sus repositorios de Docker Hub: el stack de desarrollo no levantaba en una maquina limpia",
+      "file": "docker-compose.dev.yml",
+      "lines": "minio, minio-init",
+      "problema": "MinIO elimino 'minio/minio' y 'minio/mc' de Docker Hub el 11-sep-2026. Ambas referencias devolvian 401 (pull denied) en el registry: 'docker compose -f docker-compose.dev.yml up -d' moria en la primera descarga, y el paso de la CI que levanta el compose tambien.",
+      "fix": "Se usan las imagenes de la comunidad 'pgsty' (mismo servidor, mismo cliente mc), fijadas a version: pgsty/minio:RELEASE.2026-08-04T00-00-00Z y pgsty/mc:RELEASE.2026-11-09T00-00-00Z.",
+      "status": "aplicado y verificado",
+      "verificacion": "Registry de Docker Hub: HTTP 200 con manifiesto multi-arch (amd64, arm64) para ambas; control negativo: minio/minio devuelve 401."
+    },
+    {
+      "id": "AU-09",
+      "severidad": "P1",
+      "area": "infra",
+      "titulo": "El gateway de workers era publico sin limite de ritmo ni timeouts",
+      "file": "infra/worker-gateway.conf",
+      "lines": "todo el fichero",
+      "problema": "El gateway se publica a Internet por Quick Tunnel de Cloudflare, sin Cloudflare Access delante, y no tenia ninguna de estas directivas: limit_req, limit_conn, proxy_read_timeout, proxy_send_timeout, proxy_connect_timeout, client_max_body_size, auth_request. La unica defensa era el Bearer estatico, que se puede forzar sin limite.",
+      "fix": "Zonas de limitacion (120 peticiones/minuto y 8 conexiones por IP real, con real_ip desde CF-Connecting-IP), timeouts de proxy y de cliente, client_max_body_size acorde al limite de la API y sonda /healthz para el healthcheck del compose.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero generado. La sintaxis de nginx no se pudo validar: no hay nginx en el entorno de auditoria."
+    },
+    {
+      "id": "AU-10",
+      "severidad": "P1",
+      "area": "infra",
+      "titulo": "nginx fijaba la IP del upstream: 502 en las tres rutas de worker tras recrear la API",
+      "file": "infra/worker-gateway.conf",
+      "lines": "9, 19, 29 (proxy_pass) y el bloque resolver",
+      "problema": "'proxy_pass http://api:8000' sin resolver ni variables resuelve el host una sola vez al cargar la configuracion. Tras 'docker compose up -d --force-recreate api' el contenedor cambia de IP y nginx sigue apuntando a la anterior.",
+      "fix": "Se usa 'resolver 127.0.0.11 valid=10s' (el resolutor de Docker) y una variable con el nombre del upstream, de modo que se vuelve a resolver en cada peticion.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero generado. Sin Docker no se pudo observar el ciclo recrear -> 200."
+    },
+    {
+      "id": "AU-11",
+      "severidad": "P1",
+      "area": "infra/docker",
+      "titulo": "Los contenedores de la API y del dashboard corrian como root",
+      "file": "apps/api/Dockerfile, apps/dashboard/Dockerfile",
+      "lines": "completo",
+      "problema": "Ninguno de los dos declaraba USER: uvicorn y 'npm run start' se ejecutaban como root, en contra del AGENTS.md ('nadie debe correr como root'). El publisher ya lo hacia bien con USER 999:999.",
+      "fix": "La API crea el usuario de sistema 'api' (uid 1001) y arranca con USER 1001:1001; el dashboard usa el usuario 'node' que ya trae la imagen node:20-alpine, con chown de /app y HOME=/home/node.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion de los Dockerfiles. El arranque real no se pudo verificar: no hay Docker en el entorno de auditoria."
+    },
+    {
+      "id": "AU-12",
+      "severidad": "P1",
+      "area": "apps/publisher-service",
+      "titulo": "La configuracion del publisher se leia con os.environ sueltos, sin validacion",
+      "file": "apps/publisher-service/publisher_settings.py (nuevo), apps/publisher-service/main.py",
+      "lines": "nuevo",
+      "problema": "El publisher leia PUBLISHER_BACKEND y CORS_ORIGINS con os.environ.get sueltos mientras la API usa pydantic-settings: dos paradigmas distintos, sin validacion ni defaults en un unico sitio.",
+      "fix": "Se creo publisher_settings.py con un BaseSettings: mismos nombres de variable, mismos valores por defecto, validacion explicita del backend y extra='ignore' para el .env compartido. El modulo NO se llama 'settings' a proposito: apps/api/settings.py convive en la misma sesion de pytest y el nombre del modulo en sys.modules es global.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_publisher_settings.py: default, backend invalido, normalizacion, CORS con el puerto 3000 del dashboard y claves desconocidas."
+    },
+    {
+      "id": "AU-13",
+      "severidad": "P1",
+      "area": "repo",
+      "titulo": "El manifiesto y el README contradecian el estado real del repositorio",
+      "file": "docs/estado-y-trazabilidad-marketing-content-os.json, docs/estado-sesion-actual.json, README.md",
+      "lines": "todo el fichero",
+      "problema": "El manifesto estaba fechado el 5-nov-2026 con 12 commits de desfase: declaraba '8 de 14 rutas publicas' (hoy 10 de 16), no registraba los 7 runs de CI del 8-nov y afirmaba que la CI ejecutaba actionlint, cosa imposible por el orden de los pasos (AU-05). El README tambien afirmaba que la CI estaba bloqueada solo por la facturacion.",
+      "fix": "Manifiesto y README regenerados con el estado medido: rutas reales, los 14 runs, los tres bloqueadores de la CI y la decision del usuario sobre la autenticacion de la publicacion.",
+      "status": "aplicado y verificado",
+      "verificacion": "Auditoria del 9-nov-2026 con medicion ejecutada de las 16 rutas y lectura de los 14 runs por la API de Actions."
+    },
+    {
+      "id": "AU-14",
+      "severidad": "P1",
+      "area": "tests",
+      "titulo": "Unos 2.000 lineas de workers sin un solo test",
+      "file": "tests/test_workers_research.py, tests/test_workers_lease.py, tests/test_workers_render.py (nuevos)",
+      "lines": "nuevo",
+      "problema": "apps/workers/ (1.992 lineas) no tenia ninguna cobertura: los dos P0 de esta auditoria (AU-03 y AU-04) habrian salido con un test de una linea.",
+      "fix": "Se anaden 68 tests: fechas relativas y numero de vistas, saneado del prompt, lease y reintentos del bucle del worker, validacion anti-SSRF de la URL de audio y ejecucion de comandos externos.",
+      "status": "aplicado y verificado",
+      "verificacion": "La suite pasa de 63 a 131 tests. Tambien se detecto y corrigio una fragilidad previa: el token del worker lo fijaba cada modulo de test al importarse, asi que el resultado dependia del orden de recoleccion. Ahora lo define tests/conftest.py."
+    },
+    {
+      "id": "AU-15",
+      "severidad": "P1",
+      "area": "apps/publisher-service",
+      "titulo": "El fallo al descargar el MP4 se reportaba como problema de conexion con el scheduler",
+      "file": "apps/publisher-service/adapters/open_dispatch_adapter.py, apps/publisher-service/main.py",
+      "lines": "215 (VideoStageError), 410 (dispatch_content)",
+      "problema": "Con 'youtube' en la lista de plataformas, _stage_video descarga el MP4 al volumen compartido. Si esa descarga fallaba, el error se propagaba como httpx.RequestError y el publisher lo reportaba como 'No se pudo conectar con el scheduler de publicacion': senalaba al servicio equivocado y escondia la causa real.",
+      "fix": "Se creo VideoStageError, que envuelve el fallo de descarga con la URL y la causa, y el publisher lo responde con un detalle propio.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_publisher_settings.py: un fallo de descarga devuelve 502 con un mensaje que menciona la descarga del video y NO 'no se pudo conectar con el scheduler'."
+    },
+    {
+      "id": "AU-16",
+      "severidad": "P1",
+      "area": "apps/workers",
+      "titulo": "SSRF latente: el worker de render descargaba de una URL sin validar",
+      "file": "apps/workers/local_render_worker.py",
+      "lines": "255 (validate_audio_url), 319 (download_audio)",
+      "problema": "download_audio hacia un GET a la URL tomada del request sin comprobar esquema ni host, y escribia la respuesta en public/voice.wav, que acaba dentro del MP4 publicado. Hoy era inalcanzable (ContentRequest descarta campos extra), pero quedaba como puerta dormida.",
+      "fix": "validate_audio_url exige http/https, exige https fuera de los hosts locales y comprueba el host contra una allowlist (STORAGE_PUBLIC_BASE_URL y R2_PUBLIC_HOSTS). La validacion ocurre ANTES de cualquier peticion saliente.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_render.py: esquema no permitido, host fuera de la allowlist, http plano fuera de localhost, host sufixado del permitido y host local."
+    },
+    {
+      "id": "AU-17",
+      "severidad": "P2",
+      "area": "apps/api",
+      "titulo": "init_database() recreaba la CHECK de estado en cada arranque y reescribia la tabla",
+      "file": "apps/api/main.py",
+      "lines": "ensure_job_status_constraint, _column_exists",
+      "problema": "Cada arranque ejecutaba 'ALTER TABLE jobs DROP CONSTRAINT' y despues 'ADD CONSTRAINT ... CHECK': anadir un CHECK obliga a Postgres a validar la tabla completa y toma un lock ACCESS EXCLUSIVE, asi que cada reinicio de la API reescribia la tabla jobs y bloqueaba las escrituras. Ademas el UPDATE de migracion de 'progress' recorria la tabla en cada arranque.",
+      "fix": "ensure_job_status_constraint consulta pg_constraint y solo hace DROP+ADD si la definicion no es la esperada. La migracion de datos de 'progress' solo corre cuando la columna se acaba de anadir.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_api_migrations.py: constraint correcta -> no se toca; migracion idempotente; constraint antigua -> se recrea; ausencia -> se crea."
+    },
+    {
+      "id": "AU-18",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "El .dockerignore del dashboard no excluia .env*: los secretos podian hornearse en la imagen",
+      "file": "apps/dashboard/.dockerignore",
+      "lines": "completo",
+      "problema": "Solo excluia node_modules, .next y npm-debug.log*. El contexto de build es apps/dashboard, asi que el .dockerignore de la raiz no aplica: un .env.local con un token se habria horneado en una capa de la imagen.",
+      "fix": "Se excluyen todas las variantes .env* (con excepcion de .env.example), mas .git, *.pem, *.key y *.p12.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del fichero. Sin Docker no se pudo construir la imagen para comprobarlo de forma real."
+    },
+    {
+      "id": "AU-19",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "El compose de produccion no tenia healthchecks ni politicas de reinicio",
+      "file": "infra/docker-compose.yml",
+      "lines": "todos los servicios",
+      "problema": "Ninguno de los 12 servicios declaraba 'restart:' y faltaban healthchecks en la API, el publisher, el dashboard y el gateway. publisher y worker-gateway dependian de api sin 'condition: service_healthy', y cloudflared arrancaba contra un gateway que aun puede no escuchar. Tras reiniciar el host, los servicios no volvian solos.",
+      "fix": "Se anade 'restart: unless-stopped' a todos los servicios, healthchecks a los que sirven HTTP y dependencias condicionadas a service_healthy donde corresponde.",
+      "status": "aplicado y verificado",
+      "verificacion": "El YAML parsea y la topologia se comprobo con un lector propio. Sin Docker no se pudo validar con 'docker compose config'."
+    },
+    {
+      "id": "AU-20",
+      "severidad": "P2",
+      "area": "infra",
+      "titulo": "Todos los servicios compartian la red por defecto",
+      "file": "infra/docker-compose.yml, docker-compose.dev.yml",
+      "lines": "bloque networks",
+      "problema": "Postgres, el publisher y los schedulers vivian en la misma red que el gateway publico.",
+      "fix": "Se segmentan en 'edge' (servicios que se hablan o que se publican) y 'db' (los que guardan estado). El publisher no esta en 'db' porque no habla con ninguna base de datos.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y mapa de redes comprobado servicio por servicio. Sin Docker no se pudo comprobar la resolucion de nombres entre redes."
+    },
+    {
+      "id": "AU-21",
+      "severidad": "P2",
+      "area": "infra",
+      "titulo": "La DATABASE_URL se interpolaba sin escapar: una contrasena con @, / o : rompia la URL",
+      "file": "infra/docker-compose.yml, docker-compose.dev.yml",
+      "lines": "servicio api",
+      "problema": "La URL se construia concatenando la contrasena dentro de la URL de Postgres.",
+      "fix": "Se respeta la DATABASE_URL del .env cuando esta definida (que es el caso normal) y el valor compuesto queda como respaldo.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido. El comportamiento real depende de la contrasena que use cada despliegue."
+    },
+    {
+      "id": "AU-22",
+      "severidad": "P2",
+      "area": "seguridad",
+      "titulo": "python-multipart con cuatro vulnerabilidades high en el suelo del rango",
+      "file": "apps/api/requirements.txt",
+      "lines": "ultima linea",
+      "problema": "El rango >=0.0.12 permitia cuatro vulnerabilidades: GHSA-5rvq-cxj2-64vf, GHSA-pp6c-gr5w-3c5g, GHSA-wp53-j4wj-2cfg y GHSA-59g5-xgcq-4qw3 (arregladas en 0.0.18, 0.0.22, 0.0.27 y 0.0.30).",
+      "fix": "El suelo sube a >=0.0.30.",
+      "status": "aplicado y verificado",
+      "verificacion": "Comprobado contra la base de avisos de GitHub: la version instalada (0.0.33) no aparece en ninguna de las cuatro."
+    },
+    {
+      "id": "AU-23",
+      "severidad": "P2",
+      "area": "repo",
+      "titulo": "Sin lockfile de Python: las instalaciones no eran reproducibles",
+      "file": "apps/api/requirements.lock.txt (nuevo)",
+      "lines": "nuevo",
+      "problema": "npm tenia package-lock.json; Python no. La instalacion resolvia versions distintas en cada ejecucion.",
+      "fix": "Se genero un lockfile con 'uv pip compile --universal --generate-hashes': versiones exactas y hash de cada artefacto, solo con las dependencias de runtime de la API. La imagen de la API lo instala con '--require-hashes'.",
+      "status": "aplicado y verificado",
+      "verificacion": "pip install --no-cache-dir --require-hashes -r requirements.lock.txt -> 36 paquetes, exit 0. uv con los mismos ficheros -> exit 0."
+    },
+    {
+      "id": "AU-24",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "parse_view_count multiplicaba por diez las cifras en formato espanol",
+      "file": "apps/workers/viral_research.py",
+      "lines": "parse_view_count, _parse_number",
+      "problema": "re.sub(r'[^\\d]', '', digits) borraba la coma decimal: '1,2 M de vistas' daba 12.000.000 en lugar de 1.200.000, y '1.234,5' daba 12345. Como la seleccion de virales se ordena por view_count, el criterio y los datos que llegaban al LLM eran incorrectos.",
+      "fix": "Se anade _parse_number, que distingue el formato espanol (punto de miles, coma decimal) del ingles (coma de miles, punto decimal) y aplica el sufijo K/M/B.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: 8 formatos, incluidos '1,2 M de vistas' -> 1.200.000 y '1.234,5' -> 1234."
+    },
+    {
+      "id": "AU-25",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Prompt injection: el contenido de terceros se interpolaba sin sanear en el prompt del LLM",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "sanitize_untrusted, build_prompt",
+      "problema": "Titulos, URLs y fragmentos de paginas publicas los controla un tercero y se interpolaban tal cual en el prompt; la salida del LLM se usa literalmente como guion y se publica.",
+      "fix": "Se anade sanitize_untrusted (quita caracteres de control, colapsa espacios, elimina los corchetes angulares y recorta la longitud) y el prompt marca el bloque como contenido NO CONFIABLE con delimitadores.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: caracteres de control, intento de romper los delimitadores, recorte y contenido del prompt."
+    },
+    {
+      "id": "AU-26",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Un report_progress fallido abortaba la sintesis de voz y destruia el trabajo",
+      "file": "apps/workers/local_research_worker.py, apps/workers/worker_common.py",
+      "lines": "report_progress_safe",
+      "problema": "La llamada report_progress estaba dentro del try cuyo handler marcaba 'la sintesis de voz fallo'. Un error de red transitorio al informar del progreso abortaba la voz, el worker completaba sin audio_object_key y la API respondia 422: se perdian la investigacion y el guion.",
+      "fix": "Se anade report_progress_safe, que registra el fallo y no propaga, y el reporte de la etapa de voz se mueve fuera del bloque de la voz.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de control y de los dos bloques try."
+    },
+    {
+      "id": "AU-27",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "El bucle de reserva reintentaba para siempre y salia con codigo 0",
+      "file": "apps/workers/worker_common.py, apps/workers/local_research_worker.py, apps/workers/local_render_worker.py",
+      "lines": "run_worker_loop, main",
+      "problema": "No distinguia un 401 (configuracion) de un 5xx (transitorio), no aplicaba backoff ni contaba fallos y el proceso nunca salia; ademas main() devolvia 0, de modo que un wrapper o la CI veian 'exito'.",
+      "fix": "Se anaden WorkerAuthError y WorkerUnavailableError, con tope de reintentos y espera exponencial; main() devuelve EXIT_CONFIG_ERROR (2) ante un 401/403 y EXIT_API_ERROR (3) si la API no responde.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_lease.py: un 401 detiene el bucle con WorkerAuthError; la API caida agota los reintentos y lanza WorkerUnavailableError."
+    },
+    {
+      "id": "AU-28",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "Fuga del WAV de voz de referencia en el temporal del sistema",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "synthesize_voice",
+      "problema": "La descarga del WAV de referencia ocurria antes del try cuyo finally hacia el unlink: si storage.download_file fallaba tras escribir parte del fichero, el audio de voz quedaba en %TEMP% para siempre.",
+      "fix": "La descarga se mete dentro del bloque protegido y el finally borra el fichero en cualquier camino de salida.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de control de synthesize_voice."
+    },
+    {
+      "id": "AU-29",
+      "severidad": "P2",
+      "area": "apps/workers",
+      "titulo": "El timeout de subprocess mataba solo al proceso directo y perdiase el MP4 ya renderizado",
+      "file": "apps/workers/local_render_worker.py",
+      "lines": "run_command, _process_group_options, _kill_process_group",
+      "problema": "subprocess.run(..., timeout=3600) mata 'npx' pero no a sus nietos (node, Chrome). En Windows el temporal queda bloqueado y TemporaryDirectory lanza PermissionError, con lo que el MP4 ya renderizado se descarta. Ademas TimeoutExpired no es RuntimeError, asi que el fallback de navegador no se activaba ante un timeout, solo ante exit distinto de cero.",
+      "fix": "El comando se lanza en su propio grupo de procesos (start_new_session en POSIX, CREATE_NEW_PROCESS_GROUP en Windows) y al expirar se mata el grupo entero. El timeout se convierte en RuntimeError, con lo que el fallback de navegador tambien se activa.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_render.py: un comando colgado lanza RuntimeError y el grupo se mata; el comando se lanza con grupo propio. El comportamiento en Windows no se pudo verificar aqui."
+    },
+    {
+      "id": "AU-30",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "Los defaults de postgres y los de la DATABASE_URL no coincidian en el compose de desarrollo",
+      "file": "docker-compose.dev.yml",
+      "lines": "postgres, api",
+      "problema": "postgres creaba el rol 'postgres' pero la API pedia el rol 'content': en un clon sin .env el stack no levantaba y la API nunca pasaba /healthz.",
+      "fix": "Los defaults de postgres, su healthcheck y la DATABASE_URL usan los mismos valores ('content'), que son los del .env.example.",
+      "status": "aplicado y verificado",
+      "verificacion": "YAML valido y defaults contrastados entre los tres sitios."
+    },
+    {
+      "id": "AU-31",
+      "severidad": "P2",
+      "area": "infra/docker",
+      "titulo": "Imagenes con tag latest: un 'docker compose pull' cambiaba el binario sin que nada lo detectara",
+      "file": "infra/docker-compose.yml",
+      "lines": "cloudflared, mixpost",
+      "problema": "cloudflare/cloudflared:latest, inovector/mixpost:latest y minio/mc:latest; el resto del compose si fijaba versiones.",
+      "fix": "cloudflare/cloudflared:2026.10.7 e inovector/mixpost:v2.6.0, ambas verificadas en el registry. minio/mc desaparece con AU-08.",
+      "status": "aplicado y verificado",
+      "verificacion": "Registry de Docker Hub: HTTP 200 con manifiesto multi-arch para las dos."
+    },
+    {
+      "id": "AU-32",
+      "severidad": "P3",
+      "area": "scripts",
+      "titulo": "generate_api_types.sh guardaba el cuerpo del error como si fuera el esquema y descargaba npx sin version",
+      "file": "scripts/generate_api_types.sh, apps/dashboard/package.json",
+      "lines": "completo",
+      "problema": "'curl -s' sin --fail guardaba un 404 o un 500 en openapi.json y el fallo aparecia despues como error de parseo de openapi-typescript, escondiendo que la API no estaba levantada. Ademas 'npx openapi-typescript' no estaba declarado como dependencia y se descargaba la ultima version en cada ejecucion.",
+      "fix": "'curl -fsS' con comprobacion de salida y mensaje claro; openapi-typescript queda como devDependency fijada (7.13.0) y se invoca con 'npx --no-install'. Se anade ademas scripts/wait_for_api.sh, que el Makefile usa antes de generar los tipos.",
+      "status": "aplicado y verificado",
+      "verificacion": "openapi-typescript 7.13.0 genera types/api.ts correctamente y el build del dashboard sigue en verde."
+    },
+    {
+      "id": "AU-33",
+      "severidad": "P3",
+      "area": "apps/api",
+      "titulo": "El mensaje de limite de medios decia 250 MB con el limite configurable",
+      "file": "apps/api/main.py",
+      "lines": "upload_asset, format_bytes",
+      "problema": "El detalle del 413 estaba fijo en '250 MB' aunque MAX_ASSET_BYTES es configurable: si se cambiaba el limite, el mensaje moria.",
+      "fix": "Se anade format_bytes y el mensaje se deriva del valor configurado.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_api_migrations.py: format_bytes y comprobacion de que el mensaje sale de MAX_ASSET_BYTES."
+    },
+    {
+      "id": "AU-34",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "Codigo muerto: keep_project, duration_in_frames y la rama de status 204",
+      "file": "apps/workers/local_render_worker.py, apps/workers/remotion_project.py, apps/workers/worker_common.py",
+      "lines": "varias",
+      "problema": "keep_project nunca era True, duration_in_frames se calculaba y guardaba sin que nadie lo consumiera y la rama status_code == 204 era inalcanzable (la API devuelve 200 con null).",
+      "fix": "Se eliminan los tres.",
+      "status": "aplicado y verificado",
+      "verificacion": "pyflakes sin avisos y suite completa en verde."
+    },
+    {
+      "id": "AU-35",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "normalize_sources descartaba views_per_hour y el texto de los fragmentos",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "VIDEO_SOURCE_KEYS",
+      "problema": "Los dos campos se calculaban en viral_research y se perdian al normalizar, con lo que el dashboard los pintaba vacios.",
+      "fix": "Se conservan en la lista de claves de la fuente.",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del flujo de datos entre los dos modulos."
+    },
+    {
+      "id": "AU-36",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "El flag --limit era codigo muerto",
+      "file": "apps/workers/local_research_worker.py",
+      "lines": "process_research_job, research_sources",
+      "problema": "Se parseaba pero nunca se leia: la busqueda usaba siempre el default, con lo que el operador creia estar limitando la busqueda y no lo hacia.",
+      "fix": "El limite se propaga desde el parser hasta research_sources.",
+      "status": "aplicado y verificado",
+      "verificacion": "tests/test_workers_research.py: el limite llega a la busqueda."
+    },
+    {
+      "id": "AU-37",
+      "severidad": "P3",
+      "area": "apps/dashboard",
+      "titulo": "Los tipos del dashboard se declaraban a mano y los tipos generados no se consumian",
+      "file": "apps/dashboard/app/page.tsx, apps/dashboard/types/api.ts (nuevo), apps/dashboard/types/openapi.json (nuevo)",
+      "lines": "cabecera del fichero",
+      "problema": "scripts/generate_api_types.sh generaba tipos que nadie usaba: page.tsx declaraba Job, Asset y WorkerSession a mano y los tipos se derivaban en silencio.",
+      "fix": "Se versiona el esquema y los tipos generados, y los tipos del dashboard se DERIVAN de components del contrato. 'request', 'progress' y 'output' llegan como dict[str, Any] en el esquema, asi que se sustituyen por el detalle de dominio; todo lo demas viene del contrato.",
+      "status": "aplicado y verificado",
+      "verificacion": "Build en verde. Comprobado que la proteccion funciona: al renombrar 'job_id' en el contrato, el build falla con 8 errores TS2339 (exit 1) y al restaurarlo vuelve a pasar."
+    },
+    {
+      "id": "AU-38",
+      "severidad": "P3",
+      "area": "repo",
+      "titulo": "El target dev del Makefile encadenaba 'up -d' con la generacion de tipos: carrera en el primer make dev",
+      "file": "Makefile, scripts/wait_for_api.sh (nuevo)",
+      "lines": "target generate-types",
+      "problema": "'up -d' es asincrono y generate-types necesita la API viva: en el primer 'make dev' la generacion fallaba porque la API todavia no escuchaba.",
+      "fix": "generate-types espera primero a /healthz con scripts/wait_for_api.sh (timeout de 120 s y mensaje con el comando de los logs).",
+      "status": "aplicado y verificado",
+      "verificacion": "Inspeccion del Makefile y del script."
+    },
+    {
+      "id": "AU-39",
+      "severidad": "P3",
+      "area": "apps/workers",
+      "titulo": "Un 'except: pass' tragaba el heartbeat final de cierre",
+      "file": "apps/workers/worker_common.py",
+      "lines": "run_worker_loop (finally)",
+      "problema": "Era el unico 'except: pass' del paquete y se comia el error del heartbeat de 'stopped'.",
+      "fix": "Ahora se registra como aviso.",
+      "status": "aplicado y verificado",
+      "verificacion": "pyflakes sin avisos."
     }
   ],
   "files_changed": [
@@ -1122,19 +1600,62 @@
     {
       "comando": "GET del MP4 por la URL publica de r2.dev",
       "resultado": "HTTP 200 con User-Agent de navegador, Instagram y TikTok."
+    },
+    {
+      "comando": "python -m pytest -q (suite completa tras la auditoria del 9-nov-2026)",
+      "resultado": "131 passed (antes 63). Incluye 68 tests nuevos de los workers, la API y el publisher."
+    },
+    {
+      "comando": "la suite en el venv exacto de la CI (lockfile + dev + adapters + workers)",
+      "resultado": "131 passed con las versiones bloqueadas."
+    },
+    {
+      "comando": "uv pip install --dry-run -r apps/api/requirements-dev.txt -r packages/python/adapters/requirements.txt",
+      "resultado": "exit 0. Antes: ResolutionImpossible."
+    },
+    {
+      "comando": "pip install --no-cache-dir --require-hashes -r apps/api/requirements.lock.txt",
+      "resultado": "36 paquetes, exit 0. Es el comando exacto del Dockerfile de la API."
+    },
+    {
+      "comando": "actionlint v1.7.12 .github/workflows/*.yml",
+      "resultado": "exit 0. Antes, en el orden anterior del workflow, el paso moria con exit 3."
+    },
+    {
+      "comando": "medicion de las 16 rutas de la API con TestClient, sin cabecera Authorization",
+      "resultado": "6 rutas con token (401) y 10 abiertas. Las dos nuevas abiertas son /approve y /reject (ver AU-01)."
+    },
+    {
+      "comando": "dispatch sin credencial contra un scheduler Open-Dispatch simulado",
+      "resultado": "HTTP 200 y unidad encolada para tiktok e instagram. Ver AU-02."
+    },
+    {
+      "comando": "npm run --prefix apps/dashboard build",
+      "resultado": "exit 0 con los tipos derivados del contrato. Con el contrato alterado a proposito: 8 errores TS2339 y exit 1."
+    },
+    {
+      "comando": "pyflakes sobre apps, packages, scripts y tests",
+      "resultado": "0 problemas."
     }
   ],
   "open_decisions": [
     {
       "id": "D1",
       "titulo": "Modelo de autenticacion de la API",
-      "estado": "abierto",
-      "impacto": "8 de 14 rutas publicas: creacion de jobs sin limite y subida de 250 MB sin autenticar.",
+      "estado": "aplazado por decision del usuario",
+      "impacto": "10 de 16 rutas publicas (medido el 9-nov-2026, antes 8 de 14). Incluye POST /v1/jobs/{id}/approve y /reject, que disparan la publicacion, y POST /v1/publish del publisher, que se puede llamar directamente para saltarse la revision humana. Ver AU-01 y AU-02.",
       "opciones": [
         "Token de sesion para el dashboard y CORS cerrado",
         "API publica de solo lectura y escritura restringida",
         "Proxy inverso que autentique por delante (el worker-gateway ya existe)"
-      ]
+      ],
+      "decision_del_usuario": "El 9-nov-2026 el usuario decidio aplazar la autenticacion de la publicacion (Instagram, YouTube y TikTok) hasta que todo lo demas este resuelto, y que se le solicite explicitamente. La decision sigue abierta: la superficie de ataque actual es la de AU-01 y AU-02.",
+      "mitigaciones_aplicadas": [
+        "nginx con limite de ritmo, limite de conexiones y timeouts (AU-09)",
+        "puertos del compose atados a 127.0.0.1 y redes segmentadas (AU-20, AU-31)",
+        "el gateway solo reenvia las rutas de worker, que si exigen token"
+      ],
+      "pendiente_de": "Hay que decidir el modelo: token de sesion para el dashboard, API publica de solo lectura con escritura restringida, o un proxy inverso que autentique por delante. El worker-gateway ya existe y es el punto natural."
     },
     {
       "id": "D2",
@@ -1264,7 +1785,7 @@
     }
   },
   "ci_estado": {
-    "estado": "bloqueada por la cuenta de GitHub, no por el repositorio",
+    "estado": "bloqueada por la cuenta de GitHub (facturacion) Y por tres defectos del propio repositorio, ya corregidos: en cuanto se regularice el billing, la CI deberia poder ejecutarse.",
     "workflow": ".github/workflows/notebook-ci.yml (id 408761909)",
     "firma_de_los_runs": {
       "contexto": "Firma observada mientras el repositorio era privado. Desaparecio al pasarlo a publico.",
@@ -1279,42 +1800,78 @@
     },
     "runs_observados": [
       {
-        "id": "42130918983",
-        "sha": "b941c19",
+        "id": "42508035670",
+        "numero": 9,
+        "sha": "8cc4d52",
+        "fecha": "2026-11-08",
         "conclusion": "failure",
-        "visibilidad": "privado"
+        "nota": "Ultimo run. 2 s de duracion, runner_id 0: el job se construye pero no arranca (CI-01)."
       },
       {
-        "id": "42131491506",
-        "sha": "b33e48",
-        "conclusion": "startup_failure",
-        "visibilidad": "privado"
+        "id": "42506903456",
+        "numero": 8,
+        "sha": "27187d1",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
       },
       {
-        "id": "42132130469",
-        "sha": "c3c1631",
-        "conclusion": "startup_failure",
-        "visibilidad": "privado"
+        "id": "42503752735",
+        "numero": 7,
+        "sha": "76f7f97",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
       },
       {
-        "id": "42132307491",
-        "sha": "6d0a810",
-        "conclusion": "startup_failure",
-        "visibilidad": "privado"
+        "id": "42499708259",
+        "numero": 6,
+        "sha": "5179304",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42492157549",
+        "numero": 5,
+        "sha": "bf41c2d",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42491294995",
+        "numero": 4,
+        "sha": "990901d",
+        "fecha": "2026-11-08",
+        "conclusion": "failure"
+      },
+      {
+        "id": "42205250745",
+        "numero": 3,
+        "sha": "71a0305",
+        "fecha": "2026-11-06",
+        "conclusion": "failure",
+        "nota": "Repite la anotacion de facturacion y vuelve a arrancar sin runner."
       },
       {
         "id": "42204204757",
+        "numero": 2,
         "sha": "daa5734",
+        "fecha": "2026-11-06",
         "conclusion": "failure",
-        "visibilidad": "publico",
         "jobs": 1,
         "check_run": "127846637377",
-        "nota": "Primer run con job real ('test') tras pasarlo a publico. El job se construye pero no arranca: runner_id 0, steps [] y 2 s de duracion. Su anotacion da la causa exacta (cuenta bloqueada por facturacion)."
+        "nota": "Primer run con job real tras pasarlo a publico. Su anotacion da la causa exacta (CI-01)."
+      },
+      {
+        "id": "42130918983",
+        "numero": 1,
+        "sha": "b941c19",
+        "fecha": "2026-11-05",
+        "conclusion": "failure",
+        "visibilidad": "privado"
       }
     ],
     "prueba_descartante": "Se subio un workflow minimo de tres lineas (.github/workflows/probe.yml: un job ubuntu-latest con un echo) y fallo con la MISMA firma. Eso descarta YAML, runner, secrets, reusable workflows y el propio contenido del fichero: el fallo ocurre en GitHub antes de construir el grafo de jobs. La sonda se retiro despues.",
     "bug_real_encontrado_y_corregido": "'privileged: true' no es una clave valida dentro de 'services:' de GitHub Actions (las validas son credentials, env, image, options, ports y volumes). Venia del workflow original del repo, por lo que su CI nunca llego a ejecutar. Corregido a 'options: --tls=false --privileged' y validado con actionlint.",
-    "validacion_del_fichero": "actionlint v1.7.12 (schema de GitHub Actions) pasa sin avisos, y el script Python del paso 'Validate notebooks compile' sigue siendo Python valido tras la desindentacion del bloque 'run: |'. La CI incluye ahora un paso que ejecuta actionlint, para que un workflow invalido falle en el runner y no se descubra en el primer push real.",
+    "validacion_del_fichero": "actionlint v1.7.12 pasa sin avisos sobre el workflow real, y el script Python del paso 'Validate notebooks compile' sigue siendo Python valido. La CI incluye un paso que ejecuta actionlint, y ahora ese paso va DESPUES del checkout, con lo que de verdad valida los workflows del repositorio.",
     "accion_requerida_del_usuario": [
       "Settings -> Billing and plans -> Payment information: pagar la factura pendiente o corregir la tarjeta que fallo. GitHub bloquea la cuenta completa cuando hay saldo impagado.",
       "Comprobar en https://github.com/settings/billing que la cuenta ya no figura como bloqueada y que no queda ninguna factura vencida.",
@@ -1335,7 +1892,30 @@
       "Al pasar el repositorio a publico, GitHub reconocio el workflow ('Notebook CI'), creo el job 'test' y dejo de aparecer la firma BuildFailed: el bloqueo de construccion desaparece, pero el job sigue sin arrancar.",
       "La anotacion del check-run da la causa exacta: la cuenta esta bloqueada por facturacion. Eso impide ejecutar Actions con independencia de la visibilidad del repositorio."
     ],
-    "nota_confirmada_por_ejecucion": "El run 42205250745 (push 71a0305, job 127850130738) repite la anotacion exacta y vuelve a arrancar sin runner (runner_id 0, steps 0). Confirma que el bloqueo depende solo de la cuenta y que ningun cambio en el repositorio lo mueve."
+    "nota_confirmada_por_ejecucion": "El run 42205250745 (push 71a0305, job 127850130738) repite la anotacion exacta y vuelve a arrancar sin runner (runner_id 0, steps 0). Confirma que el bloqueo depende solo de la cuenta y que ningun cambio en el repositorio lo mueve.",
+    "bloqueadores_de_la_ci": [
+      {
+        "id": "CI-01",
+        "origen": "externo",
+        "estado": "pendiente de accion del usuario",
+        "detalle": "La cuenta esta bloqueada por saldo impagado: la anotacion del check-run 127846637377 del run 42204204757 dice literalmente 'The job was not started because your account is locked due to a billing issue'. Ningun runner arranca: runner_id 0, steps [] y 2 s de duracion."
+      },
+      {
+        "id": "CI-02",
+        "origen": "repositorio",
+        "estado": "corregido (AU-05)",
+        "detalle": "El paso de actionlint estaba antes de actions/checkout: sin el repositorio en disco, actionlint recibia la ruta literal y salia con codigo 3. El job moria en el primer paso y ningun check posterior se ejecutaba."
+      },
+      {
+        "id": "CI-03",
+        "origen": "repositorio",
+        "estado": "corregido (AU-06)",
+        "detalle": "El paso 'Install dependencies' era irresoluble: gradio_client>=1.4,<2 en la API contra gradio_client>=2,<3 en los adaptadores. Ademas el servicio dind hacia inalcanzable el stack para el runner (AU-07) y el compose de dev pedia imagenes de MinIO retiradas de Docker Hub (AU-08)."
+      }
+    ],
+    "total_runs": 14,
+    "runs_verdes": 0,
+    "nota_del_9_nov": "14 runs y ninguno verde. Los cuatro 'startup_failure' del 5-nov fueron el workflow invalido ya corregido (la clave 'privileged' dentro de 'services'). Los diez 'failure' posteriores comparten la firma de la facturacion. Ademas de esa causa externa, la auditoria del 9-nov encontro tres bloqueadores propios del repositorio (CI-02, CI-03 y AU-08) que habrian hecho fallar la CI aun con la cuenta desbloqueada. Los tres estan corregidos."
   },
   "repository_visibility": {
     "estado": "publico",
@@ -1489,5 +2069,29 @@
     "youtube": "El valor 447002834549-...apps.googleusercontent.com que aporto el usuario es un OAuth 2.0 client ID de Google, NO una API key: la Data API responde 'API key not valid. Please pass a valid API key.' Se guardo como YOUTUBE_CLIENT_ID, que es lo que necesita la publicacion en YouTube junto con YOUTUBE_CLIENT_SECRET y YOUTUBE_REFRESH_TOKEN. La busqueda de virales usa el extractor sin clave.",
     "agentes": "AGENTS.md en la raiz recoge las instrucciones globales de trabajo: idioma, verificacion por ejecucion, trazabilidad, pruebas, git y reglas del entorno Windows.",
     "traspaso": "docs/estado-sesion-actual.json resume la sesion para poder retomarla en otro chat sin releer el historico."
+  },
+  "auditoria_2026_11_09": {
+    "informe": "docs/auditoria-2026-11-09.md",
+    "resumen": "Auditoria del commit 8cc4d52 con verificacion por ejecucion en sandbox Linux: suite real, pyflakes, build de Next.js, smoke test del publisher, actionlint, resolver uv, y sondeo de la API y del publisher con TestClient y curl contra un scheduler Open-Dispatch simulado.",
+    "veredicto": "FAIL",
+    "hallazgos": {
+      "P0": 6,
+      "P1": 7,
+      "P2": 16,
+      "P3": 5,
+      "total": 34
+    },
+    "corregidos": 32,
+    "aplazados_por_decision_del_usuario": 2,
+    "aplazados": [
+      "AU-01: la puerta de aprobacion no exige autenticacion",
+      "AU-02: el publisher publica sin autenticacion y permite saltarse la puerta"
+    ],
+    "metodo": "Todo numero de este informe es medido, no estimado. Lo que no se pudo ejecutar (Docker) queda marcado como no verificado.",
+    "entorno": {
+      "sistema": "Linux, Python 3.11.2, Node 22.19.0, npm 10.9.3",
+      "docker": "no disponible: todo lo que exige 'docker compose config' queda sin verificar",
+      "nota": "El repositorio se desarrollo sobre Windows con PowerShell 5.1; las rutas y el estilo CRLF/LF se han respetado."
+    }
   }
 }
