@@ -1,3 +1,18 @@
+# Contexto de build del dashboard: este es el UNICO .dockerignore que aplica,
+# porque el contexto de Docker es apps/dashboard (el de la raiz no se usa).
 node_modules
 .next
 npm-debug.log*
+# Los secretos nunca se hornean en la imagen: Next.js lee .env.local,
+# .env.production y demas en tiempo de construccion, asi que se excluyen
+# TODAS las variantes. La unica excepcion es .env.example, que solo lleva
+# placeholders.
+.env*
+!.env.example
+# Otros ficheros que no deben viajar dentro de la imagen.
+.git
+.gitignore
+*.pem
+*.key
+*.p12
+.DS_Store

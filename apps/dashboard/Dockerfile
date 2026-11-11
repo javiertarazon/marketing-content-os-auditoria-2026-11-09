@@ -11,5 +11,13 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+# La imagen node:20-alpine ya trae el usuario "node" (uid 1000): se usa como
+# usuario de ejecucion, sin crear otro (el AGENTS.md prohibe correr como
+# root). chown deja /app (node_modules y el .next construido) en manos de ese
+# usuario, y HOME apunta a su home para que npm no intente escribir en
+# /root/.npm al arrancar.
+RUN chown -R node:node /app
+ENV HOME=/home/node
 EXPOSE 3000
+USER node
 CMD ["npm", "run", "start"]
