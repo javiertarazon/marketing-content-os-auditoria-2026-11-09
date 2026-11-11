@@ -101,8 +101,46 @@ def _first_match(patterns: Iterable[str], window: str) -> str | None:
     return None
 
 
+def _parse_number(raw: str) -> float | None:
+    """Interpreta un numero escrito con separadores de miles o decimales.
+
+    Acepta el formato espanol ("1.234,5": punto de miles y coma decimal) y el ingles
+    ("1,234.5": coma de miles y punto decimal). Un unico separador seguido de tres
+    digitos se lee como separador de miles ("1.234" -> 1234); el resto de digitos
+    ("1,2" -> 1.2) se lee como decimal.
+    """
+    cleaned = re.sub(r"[\s\u00a0]", "", str(raw))
+    if not cleaned:
+        return None
+    has_dot = "." in cleaned
+    has_comma = "," in cleaned
+    if has_dot and has_comma:
+        # El separador que aparece mas a la derecha es el decimal.
+        if cleaned.rfind(",") > cleaned.rfind("."):
+            cleaned = cleaned.replace(".", "").replace(",", ".")
+        else:
+            cleaned = cleaned.replace(",", "")
+    elif has_dot or has_comma:
+        separator = "." if has_dot else ","
+        parts = cleaned.split(separator)
+        if len(parts) > 2:
+            cleaned = "".join(parts)
+        elif len(parts) == 2 and len(parts[1]) == 3:
+            cleaned = "".join(parts)
+        else:
+            cleaned = f"{parts[0]}.{parts[1]}"
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
 def parse_view_count(text: str | None) -> int | None:
-    """Convierte un texto de vistas ("1.234.567 de vistas", "12K views") en un entero."""
+    """Convierte un texto de vistas ("1,2 M de vistas", "12K views") en un entero.
+
+    Entiende el formato espanol (punto de miles, coma decimal) y el ingles (coma de
+    miles, punto decimal), con los sufijos K, M y B.
+    """
     if not text:
         return None
     normalized = text.replace("\u00a0", " ").strip()
@@ -118,42 +156,50 @@ def parse_view_count(text: str | None) -> int | None:
         if not digits_match:
             return None
         digits = digits_match.group(1)
-    cleaned = re.sub(r"[^\d]", "", digits)
-    if not cleaned:
+    value = _parse_number(digits)
+    if value is None:
         return None
-    try:
-        return int(cleaned) * multiplier
-    except ValueError:
-        return None
+    return int(value * multiplier)
+
+
+_RELATIVE_TIME_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"(\d+)\s*segundos?", "seconds"),
+    (r"(\d+)\s*minutos?", "minutes"),
+    (r"(\d+)\s*horas?", "hours"),
+    (r"(\d+)\s*d[ií]as?", "days"),
+    (r"(\d+)\s*semanas?", "weeks"),
+    (r"(\d+)\s*mes(?:es)?", "months"),
+    (r"(\d+)\s*a[ñ]os?", "years"),
+    (r"(\d+)\s*seconds?", "seconds"),
+    (r"(\d+)\s*minutes?", "minutes"),
+    (r"(\d+)\s*hours?", "hours"),
+    (r"(\d+)\s*days?", "days"),
+    (r"(\d+)\s*weeks?", "weeks"),
+    (r"(\d+)\s*months?", "months"),
+    (r"(\d+)\s*years?", "years"),
+)
 
 
 def _parse_relative_time(text: str | None) -> str | None:
-    """Convierte "hace 3 meses" / "3 months ago" en una marca ISO aproximada."""
+    """Convierte "hace 3 meses" / "3 months ago" en una marca ISO aproximada.
+
+    ``timedelta`` no admite meses ni anos, asi que se aproximan con 30 y 365 dias.
+    Acepta el espanol ("hace 5 dias") y el ingles ("2 hours ago").
+    """
     if not text:
         return None
     lowered = text.lower()
-    units = {
-        "segundo": "seconds",
-        "minuto": "minutes",
-        "hora": "hours",
-        "día": "days",
-        "dia": "days",
-        "semana": "weeks",
-        "mes": "months",
-        "año": "days",
-        "ano": "days",
-    }
-    for spanish, english in units.items():
-        match = re.search(rf"(\d+)\s*{spanish}", lowered)
+    for pattern, unit in _RELATIVE_TIME_PATTERNS:
+        match = re.search(pattern, lowered)
         if not match:
             continue
         amount = int(match.group(1))
-        if english == "days" and "año" in lowered or english == "days" and "ano" in lowered:
+        if unit == "months":
+            delta = timedelta(days=30 * amount)
+        elif unit == "years":
             delta = timedelta(days=365 * amount)
-        elif english == "days":
-            delta = timedelta(days=amount)
         else:
-            delta = timedelta(**{english: amount})
+            delta = timedelta(**{unit: amount})
         return (datetime.now(timezone.utc) - delta).isoformat().replace("+00:00", "Z")
     return None
 

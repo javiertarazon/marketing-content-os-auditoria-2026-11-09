@@ -8,8 +8,11 @@ Reune lo que los dos workers (investigacion y render) necesitan igual:
 - Cliente HTTP de la API con el contrato exacto que expone ``apps/api/main.py``:
   ``POST /v1/jobs/next``, ``POST /v1/jobs/{id}/heartbeat``, ``POST /v1/jobs/{id}/progress``,
   ``POST /v1/jobs/{id}/complete``, ``POST /v1/jobs/{id}/fail`` y ``POST /v1/workers/heartbeat``.
-- Renovacion periodica del lease del trabajo (cada 60 s) en un hilo aparte.
-- Bucle de trabajo: pide un job, lo procesa y vuelve a pedir otro.
+- Renovacion periodica del lease del trabajo (cada 60 s) en un hilo aparte, con
+  reintentos: un fallo transitorio de red no tira el trabajo.
+- Bucle de trabajo: pide un job, lo procesa y vuelve a pedir otro. Si la API
+  rechaza las credenciales (401/403) o no responde tras varios intentos, el
+  worker se detiene con un codigo de error distinto de cero.
 
 La URL de la API se resuelve en este orden:
 
@@ -46,8 +49,19 @@ DEFAULT_ENV_FILE = REPO_ROOT / ".env"
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 POLL_SECONDS = 5.0
 LEASE_RENEW_SECONDS = 60.0
+# Fallos de renovacion tolerados antes de dar el lease por perdido.
+LEASE_MAX_CONSECUTIVE_FAILURES = 3
+# Espera base entre reintentos de renovacion (crece con los fallos seguidos).
+LEASE_RETRY_BACKOFF_SECONDS = 5.0
+# Intentos seguidos de pedir trabajo antes de abandonar.
+MAX_RESERVE_RETRIES = 5
+RESERVE_BACKOFF_SECONDS = 5.0
+RESERVE_BACKOFF_MAX_SECONDS = 60.0
 FAIL_MESSAGE_LIMIT = 1900
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+EXIT_OK = 0
+EXIT_CONFIG_ERROR = 2
+EXIT_API_ERROR = 3
 
 
 def load_env_file(env_file: Path | None = None) -> None:
@@ -72,6 +86,29 @@ def load_env_file(env_file: Path | None = None) -> None:
             value = value[1:-1]
         if key and key not in os.environ:
             os.environ[key] = value
+
+
+class WorkerError(RuntimeError):
+    """Error fatal del worker: no puede seguir trabajando."""
+
+
+class WorkerAuthError(WorkerError):
+    """La API rechazo las credenciales del worker (401 o 403)."""
+
+
+class WorkerUnavailableError(WorkerError):
+    """La API no respondio tras varios intentos seguidos."""
+
+
+def _status_code(error: requests.HTTPError) -> int:
+    """Codigo HTTP del error, o 0 si no se puede saber."""
+    response = getattr(error, "response", None)
+    return int(getattr(response, "status_code", 0) or 0)
+
+
+def _is_auth_error(error: requests.HTTPError) -> bool:
+    """``True`` si la API rechazo el token del worker (401 o 403)."""
+    return _status_code(error) in (401, 403)
 
 
 @dataclass(frozen=True)
@@ -195,8 +232,7 @@ class ApiClient:
             headers=self.headers,
             timeout=30,
         )
-        if response.status_code == 204:
-            return None
+        # La API responde 200 con ``null`` cuando no hay cola (nunca 204).
         response.raise_for_status()
         if not response.content.strip():
             return None
@@ -265,13 +301,56 @@ class ApiClient:
         response.raise_for_status()
 
 
-class LeaseRenewer:
-    """Renueva el lease del trabajo en segundo plano y avisa si se pierde."""
+def report_progress_safe(
+    client: ApiClient,
+    job_id: str,
+    lease_token: str,
+    stage: str,
+    message: str,
+    percent: int,
+) -> bool:
+    """Informa el avance del trabajo sin tirar el trabajo si la API falla.
 
-    def __init__(self, client: ApiClient, job_id: str, lease_token: str) -> None:
+    Un fallo de red al informar del progreso no debe destruir un trabajo que ya lleva
+    minutos invertido: el estado del lease lo vigila ``LeaseRenewer``.
+    """
+    try:
+        client.report_progress(job_id, lease_token, stage, message, percent)
+        return True
+    except requests.RequestException as error:
+        logger.warning("No se pudo informar el progreso de la etapa %s: %s", stage, error)
+        return False
+
+
+class LeaseRenewer:
+    """Renueva el lease del trabajo en segundo plano y avisa si se pierde.
+
+    Un fallo transitorio de red no tira el trabajo: se reintenta con espera
+    creciente. El lease solo se da por perdido cuando la API responde 409 (ya no
+    reconoce la reserva) o cuando se acumulan varios fallos consecutivos.
+    """
+
+    def __init__(
+        self,
+        client: ApiClient,
+        job_id: str,
+        lease_token: str,
+        *,
+        renew_seconds: float | None = None,
+        max_failures: int | None = None,
+        backoff_seconds: float | None = None,
+    ) -> None:
         self.client = client
         self.job_id = job_id
         self.lease_token = lease_token
+        self.renew_seconds = LEASE_RENEW_SECONDS if renew_seconds is None else renew_seconds
+        self.max_failures = (
+            LEASE_MAX_CONSECUTIVE_FAILURES if max_failures is None else max_failures
+        )
+        self.backoff_seconds = (
+            LEASE_RETRY_BACKOFF_SECONDS if backoff_seconds is None else backoff_seconds
+        )
+        self.consecutive_failures = 0
         self._stop = threading.Event()
         self._lost = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
@@ -287,7 +366,7 @@ class LeaseRenewer:
 
     @property
     def lost(self) -> bool:
-        """``True`` si la renovacion del lease fallo alguna vez."""
+        """``True`` si el lease se perdio de forma definitiva."""
         return self._lost.is_set()
 
     def ensure_active(self) -> None:
@@ -295,20 +374,64 @@ class LeaseRenewer:
         if self._lost.is_set():
             raise RuntimeError("El lease del trabajo se perdio; no se envia el resultado tardio.")
 
-    def _run(self) -> None:
-        while not self._stop.wait(LEASE_RENEW_SECONDS):
-            try:
-                self.client.job_heartbeat(self.job_id, self.lease_token)
-            except requests.RequestException as error:
+    def renew_once(self) -> bool:
+        """Intenta renovar el lease una vez.
+
+        Devuelve ``False`` si el lease se ha perdido definitivamente (la API
+        responde 409 o se agotan los fallos tolerados) y ``True`` en el resto de
+        casos, incluidos los fallos transitorios que todavia tienen margen.
+        """
+        try:
+            self.client.job_heartbeat(self.job_id, self.lease_token)
+        except requests.HTTPError as error:
+            if _status_code(error) == 409:
                 self._lost.set()
                 logger.warning(
-                    "No se pudo renovar el lease del trabajo %s: %s", self.job_id, error
+                    "La API ya no reconoce el lease del trabajo %s (409): el trabajo se perdio.",
+                    self.job_id,
                 )
+                return False
+            return self._register_failure(error)
+        except requests.RequestException as error:
+            return self._register_failure(error)
+        self.consecutive_failures = 0
+        try:
+            self.client.worker_heartbeat(self.job_id, "working")
+        except requests.RequestException as error:
+            logger.warning("No se pudo actualizar la presencia del worker: %s", error)
+        return True
+
+    def _register_failure(self, error: Exception) -> bool:
+        """Suma un fallo de renovacion y decide si el lease sigue vivo."""
+        self.consecutive_failures += 1
+        if self.consecutive_failures >= self.max_failures:
+            self._lost.set()
+            logger.error(
+                "El lease del trabajo %s se perdio tras %s renovaciones fallidas seguidas: %s",
+                self.job_id,
+                self.consecutive_failures,
+                error,
+            )
+            return False
+        logger.warning(
+            "Fallo transitorio al renovar el lease del trabajo %s (intento %s de %s): %s",
+            self.job_id,
+            self.consecutive_failures,
+            self.max_failures,
+            error,
+        )
+        return True
+
+    def _renew_delay(self) -> float:
+        """Espera antes del siguiente intento de renovacion."""
+        if not self.consecutive_failures:
+            return self.renew_seconds
+        return min(self.renew_seconds, self.backoff_seconds * self.consecutive_failures)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self._renew_delay()):
+            if not self.renew_once():
                 return
-            try:
-                self.client.worker_heartbeat(self.job_id, "working")
-            except requests.RequestException as error:
-                logger.warning("No se pudo actualizar la presencia del worker: %s", error)
 
 
 def run_worker_loop(
@@ -318,27 +441,75 @@ def run_worker_loop(
     once: bool = False,
     max_jobs: int | None = None,
     wait_seconds: float | None = None,
+    max_retries: int | None = None,
+    backoff_seconds: float | None = None,
 ) -> int:
     """Bucle principal: pide trabajos y los procesa hasta agotar los limites.
 
     ``once`` procesa un unico trabajo y sale, ``max_jobs`` acota el total de trabajos
     y ``wait_seconds`` acota la espera cuando no hay cola (modo ``--once``).
+
+    Si la API rechaza las credenciales (401/403) se detiene con ``WorkerAuthError``:
+    es un error de configuracion y no tiene sentido seguir insistiendo. Si la API no
+    responde, se reintenta con espera creciente y, al agotar ``max_retries`` intentos
+    seguidos, se detiene con ``WorkerUnavailableError``. En los dos casos el worker
+    termina con un codigo de error distinto de cero.
     """
+    retries = MAX_RESERVE_RETRIES if max_retries is None else max_retries
+    backoff = RESERVE_BACKOFF_SECONDS if backoff_seconds is None else backoff_seconds
     processed = 0
     waited = 0.0
+    consecutive_errors = 0
     try:
         while True:
             if max_jobs is not None and processed >= max_jobs:
                 break
             try:
                 client.worker_heartbeat(None, "idle")
+            except requests.HTTPError as error:
+                if _is_auth_error(error):
+                    raise WorkerAuthError(
+                        "La API rechazo el token del worker (HTTP "
+                        f"{_status_code(error)}); revisa WORKER_API_TOKEN."
+                    ) from error
+                logger.warning("No se pudo actualizar la presencia del worker: %s", error)
             except requests.RequestException as error:
                 logger.warning("No se pudo actualizar la presencia del worker: %s", error)
+            job = None
             try:
                 job = client.next_job()
+            except requests.HTTPError as error:
+                if _is_auth_error(error):
+                    raise WorkerAuthError(
+                        "La API rechazo el token del worker (HTTP "
+                        f"{_status_code(error)}); revisa WORKER_API_TOKEN."
+                    ) from error
+                consecutive_errors += 1
+                logger.warning(
+                    "No se pudo pedir trabajo a la API (HTTP %s, fallo %s de %s): %s",
+                    _status_code(error),
+                    consecutive_errors,
+                    retries,
+                    error,
+                )
             except requests.RequestException as error:
-                logger.warning("No se pudo pedir trabajo a la API: %s", error)
-                job = None
+                consecutive_errors += 1
+                logger.warning(
+                    "No se pudo pedir trabajo a la API (fallo %s de %s): %s",
+                    consecutive_errors,
+                    retries,
+                    error,
+                )
+            if consecutive_errors:
+                if consecutive_errors >= retries:
+                    raise WorkerUnavailableError(
+                        "La API no devolvio trabajo tras "
+                        f"{consecutive_errors} intentos seguidos; el worker se detiene."
+                    )
+                time.sleep(
+                    min(backoff * (2 ** (consecutive_errors - 1)), RESERVE_BACKOFF_MAX_SECONDS)
+                )
+                continue
             if job is None:
                 if once and wait_seconds is not None and waited >= wait_seconds:
                     logger.info("No llego ningun trabajo en %.0f s; se sale.", waited)
@@ -359,8 +530,8 @@ def run_worker_loop(
     finally:
         try:
             client.worker_heartbeat(None, "stopped", stopped=True)
-        except requests.RequestException:
-            pass
+        except requests.RequestException as error:
+            logger.warning("No se pudo informar del cierre del worker: %s", error)
     return processed
 
 

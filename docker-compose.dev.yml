@@ -2,23 +2,32 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    networks: ["db"]
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-marketing_content}
+      # Los defaults coinciden con los de la DATABASE_URL de la API (abajo) y con
+      # el .env.example: si no, el rol que crea postgres no es el que pide la
+      # API y el stack no levanta sin .env.
+      POSTGRES_USER: ${POSTGRES_USER:-content}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-content}
+      POSTGRES_DB: ${POSTGRES_DB:-content}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-content}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   minio:
-    image: minio/minio:RELEASE.2024-04-12T13-34-43Z
+    # MinIO elimino sus repositorios de Docker Hub el 11-09-2026: 'minio/minio'
+    # y 'minio/mc' responden 401 (pull denied) y el stack no levanta en una
+    # maquina limpia. Se usa el build de la comunidad 'pgsty', que sigue
+    # publicado, es multi-arch (amd64/arm64) y expone la misma API.
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     command: server /data --console-address ":9001"
+    networks: ["edge"]
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -36,7 +45,9 @@ services:
   # Crea el bucket de medios una sola vez. Sin esto, la primera subida falla
   # con NoSuchBucket.
   minio-init:
-    image: minio/mc:latest
+    # Mismo motivo que el servicio 'minio': 'minio/mc' ya no existe en Docker Hub.
+    image: pgsty/mc:RELEASE.2026-11-09T00-00-00Z
+    networks: ["edge"]
     depends_on:
       minio:
         condition: service_healthy
@@ -66,7 +77,11 @@ services:
       S3_BUCKET: ${DEV_S3_BUCKET:-content-media}
       S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-content}:${POSTGRES_PASSWORD:-content}@postgres:5432/${POSTGRES_DB:-content}
+      # La URL se respeta tal cual si viene en el .env: interpolar la contrasena
+      # dentro de la URL la rompe si lleva '@', '/' o ':'. El valor compuesto es
+      # solo el respaldo para cuando no hay DATABASE_URL definida.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-content}:${POSTGRES_PASSWORD:-content}@postgres:5432/${POSTGRES_DB:-content}}
+    networks: ["edge", "db"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,6 +119,13 @@ services:
       - /app/node_modules
       - /app/.next
     command: npm run dev
+    networks: ["edge"]
+
+networks:
+  # Red de servicio (API, dashboard y almacenamiento local).
+  edge:
+  # Red de datos (solo el postgres de desarrollo).
+  db:
 
 volumes:
   pgdata:
